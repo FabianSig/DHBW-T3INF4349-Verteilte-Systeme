@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { WebsocketService } from '../services/websocket.service';  // Your custom service
+import { WebsocketService } from '../services/websocket.service';
 
 @Component({
   selector: 'app-chat',
@@ -7,21 +7,26 @@ import { WebsocketService } from '../services/websocket.service';  // Your custo
   styleUrls: ['./chat.component.scss']
 })
 export class ChatComponent implements OnInit {
+  message = '';
   messages: string[] = [];
-  message: string = '';
 
-  constructor(private websocketService: WebsocketService) {}
+  constructor(private websocketService: WebsocketService) { }
 
   ngOnInit(): void {
-    this.websocketService.getMessages().subscribe((msg) => {
-      this.messages.push(msg);
+    // Subscribe to messages from the WebSocket server
+    this.websocketService.subscribeToMessages().subscribe((msg) => {
+      const messageBody = JSON.parse(msg.body); // Assuming the message is in JSON format
+      this.messages.push(`${messageBody.name}: ${messageBody.content}`);
     });
   }
 
-  sendMessage(): void {
-    if (this.message.trim()) {
-      this.websocketService.sendMessage(this.message);
-      this.message = '';
-    }
+  // Send a message using WebSocket
+  sendMessage() {
+    const msg = {
+      name: 'User',
+      content: this.message
+    };
+    this.websocketService.sendMessage(msg);
+    this.message = '';
   }
 }
