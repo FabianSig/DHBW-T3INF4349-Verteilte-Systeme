@@ -1,13 +1,13 @@
-package fabiansig.t3inf4349backend.dto;
+package fabiansig.dto;
 
-public class Message {
+public class OutputMessage {
     private String name;
     private String content;
 
     // Constructors, getters, and setters
-    public Message() {}
+    public OutputMessage() {}
 
-    public Message(String name, String content) {
+    public OutputMessage(String name, String content) {
         this.name = name;
         this.content = content;
     }
@@ -28,3 +28,4 @@ public class Message {
         this.content = content;
     }
 }
+

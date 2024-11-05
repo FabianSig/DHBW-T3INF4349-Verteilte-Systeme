@@ -1,4 +1,4 @@
-package fabiansig.t3inf4349backend;
+package fabiansig;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,4 +1,4 @@
-package fabiansig.t3inf4349backend.Config;
+package fabiansig.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

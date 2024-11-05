@@ -1,4 +1,4 @@
-package fabiansig.t3inf4349backend;
+package fabiansig;
 
 import org.springframework.boot.test.context.TestConfiguration;
 
