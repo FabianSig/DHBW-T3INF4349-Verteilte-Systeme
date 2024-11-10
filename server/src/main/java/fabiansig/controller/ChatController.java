@@ -1,20 +1,29 @@
 package fabiansig.controller;
-import fabiansig.dto.Message;
+
 import fabiansig.dto.OutputMessage;
+import fabiansig.model.Message;
+import fabiansig.service.ChatService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.util.HtmlUtils;
 
 @Controller
 public class ChatController {
 
+    private final ChatService chatService;
+
+    public ChatController(ChatService chatService) {
+
+        this.chatService = chatService;
+    }
+
     // Handle messages sent to /app/message
     @MessageMapping("/message")
     @SendTo("/topic/messages")
-    public OutputMessage send(Message message) throws Exception {
+    public OutputMessage send(Message message) {
         // Simulate processing or sanitization
-        return new OutputMessage(HtmlUtils.htmlEscape(message.getName()), HtmlUtils.htmlEscape(message.getContent()));
+        return chatService.send(message);
     }
+
 }
 
