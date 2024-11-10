@@ -1,0 +1,7 @@
+services:
+    elastic:
+      image: elastic/elasticsearch:7.17.25
+      ports:
+        - "9200:9200"
+      environment:
+        - discovery.type=single-node
