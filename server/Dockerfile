@@ -1,11 +1,13 @@
 FROM maven:3.9.8-eclipse-temurin-21 AS build
 
-WORKDIR /app
+ENV HOME=/usr/app
+RUN mkdir p- ${HOME}
+WORKDIR ${HOME}
 
-COPY pom.xml /app/
-COPY src /app/src
+COPY src ${HOME}/src
+COPY pom.xml ${HOME}
 
-RUN mvn clean package
+RUN --mount=type=cache,target=/root/.m2 mvn -f ${HOME}/pom.xml clean package
 
 FROM openjdk:21
 
