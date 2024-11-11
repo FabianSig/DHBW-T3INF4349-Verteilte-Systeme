@@ -10,13 +10,14 @@ export class WebsocketService {
   private client!: Client;
 
   constructor() {
+    const hostname = location.host
     this.client = new Client({
-      brokerURL: 'ws://localhost:8080/chat', // WebSocket endpoint
+      brokerURL: 'ws://' + hostname + '/chat', // WebSocket endpoint
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
       webSocketFactory: () => {
-        return new SockJS('http://localhost:8080/chat'); // SockJS endpoint
+        return new SockJS('http://' + hostname + '/chat'); // SockJS endpoint
       }
     });
 
