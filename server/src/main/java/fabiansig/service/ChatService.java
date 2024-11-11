@@ -27,11 +27,20 @@ public class ChatService {
 
     public OutputMessage send(Message message) {
 
+        if(!isMessageValid(message)) {
+            return null;
+        }
+
         messageRepository.save(message);
 
         MessageReceivedEvent messageReceivedEvent = new MessageReceivedEvent(message, consumerGroupId);
         kafkaTemplate.send("chat", messageReceivedEvent);
         return new OutputMessage(HtmlUtils.htmlEscape(message.getName()), HtmlUtils.htmlEscape(message.getContent()));
+    }
+
+    private boolean isMessageValid(Message message) {
+        // TODO fabian hier message überprüfen
+        return true;
     }
 
     @KafkaListener(topics = "chat")
