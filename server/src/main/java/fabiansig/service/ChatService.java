@@ -28,9 +28,6 @@ public class ChatService {
     public OutputMessage send(Message message) {
 
         messageRepository.save(message);
-        Iterable<Message> messages = messageRepository.findAll();
-        messages.forEach(it -> log.info("Message: {}", it.toString()));
-        log.info("Start - Sending message {} to Kafka topic chat", message);
 
         MessageReceivedEvent messageReceivedEvent = new MessageReceivedEvent(message, consumerGroupId);
         kafkaTemplate.send("chat", messageReceivedEvent);
@@ -39,11 +36,11 @@ public class ChatService {
 
     @KafkaListener(topics = "chat")
     public void receive(MessageReceivedEvent messageReceivedEvent) {
-        if(consumerGroupId.equals(messageReceivedEvent.producerID())) {
+
+        if (consumerGroupId.equals(messageReceivedEvent.producerID())) {
             return;
         }
-        log.info("Received message from Kafka topic chat: {}", messageReceivedEvent);
-        simpMessagingTemplate.convertAndSend("/topic/messages", new OutputMessage(HtmlUtils.htmlEscape(messageReceivedEvent.message().getName()), HtmlUtils.htmlEscape(messageReceivedEvent.message().getContent())));
+        simpMessagingTemplate.convertAndSend("/topic/messages", new OutputMessage(messageReceivedEvent.message().getName(), messageReceivedEvent.message().getContent()));
     }
 
 }
