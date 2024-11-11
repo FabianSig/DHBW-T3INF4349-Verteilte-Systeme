@@ -19,6 +19,7 @@ public class Message {
 
     private String name;
 
+    // TODO mit @CreatedDate ersetzen. Converter in config benötigt
     private long timestamp = System.currentTimeMillis();
 
 }
