@@ -13,6 +13,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.StreamSupport;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -27,7 +31,7 @@ public class ChatService {
 
     public OutputMessage send(Message message) {
 
-        if(!isMessageValid(message)) {
+        if (!isMessageValid(message)) {
             return null;
         }
 
@@ -50,6 +54,18 @@ public class ChatService {
             return;
         }
         simpMessagingTemplate.convertAndSend("/topic/messages", new OutputMessage(messageReceivedEvent.message().getName(), messageReceivedEvent.message().getContent()));
+    }
+
+    public List<OutputMessage> getHistory() {
+
+        Iterable<Message> messages = messageRepository.findAll();
+        List<OutputMessage> outputMessages = new ArrayList<>();
+
+        StreamSupport.stream(messages.spliterator(), false)
+                .map(message -> new OutputMessage(HtmlUtils.htmlEscape(message.getName()), HtmlUtils.htmlEscape(message.getContent())))
+                .forEach(outputMessages::add);
+
+        return outputMessages;
     }
 
 }
