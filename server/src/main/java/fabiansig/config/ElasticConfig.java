@@ -12,14 +12,14 @@ import org.springframework.lang.NonNull;
 public class ElasticConfig extends ElasticsearchConfiguration {
 
     @Value("${elastic.host}")
-    private String elasticUrl;
+    private String elasticHost;
 
     @Override
-    @NonNull
+    @NonNull // benötigt sonst warnung
     public ClientConfiguration clientConfiguration() {
 
         return ClientConfiguration.builder()
-                .connectedTo(elasticUrl)
+                .connectedTo(elasticHost)
                 .build();
     }
 

@@ -32,6 +32,12 @@ export class WebsocketService {
                 this.client.subscribe('/topic/messages', message => {
                     observer.next(message);
                 });
+
+                // sobald der client connected, wird der chatverlauf geladen
+                this.client.subscribe("/app/history", message => {
+                    console.log("Received message: " + message.body);
+                    observer.next(message);
+                })
             };
         });
     }

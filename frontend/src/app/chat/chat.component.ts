@@ -1,32 +1,41 @@
-import { Component, OnInit } from '@angular/core';
-import { WebsocketService } from '../services/websocket.service';
+import {Component, OnInit} from '@angular/core';
+import {WebsocketService} from '../services/websocket.service';
 
 @Component({
-  selector: 'app-chat',
-  templateUrl: './chat.component.html',
-  styleUrls: ['./chat.component.scss']
+    selector: 'app-chat',
+    templateUrl: './chat.component.html',
+    styleUrls: ['./chat.component.scss']
 })
 export class ChatComponent implements OnInit {
-  message = '';
-  messages: string[] = [];
+    message = '';
+    messages: string[] = [];
 
-  constructor(private websocketService: WebsocketService) { }
+    constructor(private readonly websocketService: WebsocketService) {
+    }
 
-  ngOnInit(): void {
-    // Subscribe to messages from the WebSocket server
-    this.websocketService.subscribeToMessages().subscribe((msg) => {
-      const messageBody = JSON.parse(msg.body); // Assuming the message is in JSON format
-      this.messages.push(`${messageBody.name}: ${messageBody.content}`);
-    });
-  }
+    ngOnInit(): void {
+        // Subscribe to messages from the WebSocket server
+        this.websocketService.subscribeToMessages().subscribe((msg) => {
+            //falls es ein array ist, anders parsen
+            if (msg.body.includes("[")) {
+                const messageBody = JSON.parse(msg.body); // Assuming the message is in JSON format
+                messageBody.forEach((msg: any) => {
+                    this.messages.push(`${msg.name}: ${msg.content}`);
+                });
+                return;
+            }
+            const messageBody = JSON.parse(msg.body); // Assuming the message is in JSON format
+            this.messages.push(`${messageBody.name}: ${messageBody.content}`);
+        });
+    }
 
-  // Send a message using WebSocket
-  sendMessage() {
-    const msg = {
-      name: 'User',
-      content: this.message
-    };
-    this.websocketService.sendMessage(msg);
-    this.message = '';
-  }
+    // Send a message using WebSocket
+    sendMessage() {
+        const msg = {
+            name: 'User',
+            content: this.message
+        };
+        this.websocketService.sendMessage(msg);
+        this.message = '';
+    }
 }

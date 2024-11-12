@@ -62,7 +62,7 @@ public class ChatService {
         List<OutputMessage> outputMessages = new ArrayList<>();
 
         StreamSupport.stream(messages.spliterator(), false)
-                .map(message -> new OutputMessage(HtmlUtils.htmlEscape(message.getName()), HtmlUtils.htmlEscape(message.getContent())))
+                .map(message -> new OutputMessage(message.getName(), message.getContent()))
                 .forEach(outputMessages::add);
 
         return outputMessages;
