@@ -19,7 +19,7 @@ public class Message {
 
     private String name;
 
-    // TODO mit @CreatedDate ersetzen. Converter in config benötigt
+    // TODO soll vom frontend mitgeschickt werden
     private long timestamp = System.currentTimeMillis();
 
 }
