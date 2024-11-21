@@ -27,7 +27,7 @@ public class ChatController {
         return chatService.send(message);
     }
 
-    @SubscribeMapping("/test")
+    @SubscribeMapping("/history")
     public List<OutputMessage> getHistory() {
 
         return chatService.getHistory();

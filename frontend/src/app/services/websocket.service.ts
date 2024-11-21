@@ -10,7 +10,8 @@ export class WebsocketService {
     private readonly client!: Client;
 
     constructor() {
-        const hostname = location.host
+        const hostname = "localhost"
+        console.log("Hostname: " + hostname)
         this.client = new Client({
             brokerURL: 'ws://' + hostname + '/chat', // WebSocket endpoint
             reconnectDelay: 5000,

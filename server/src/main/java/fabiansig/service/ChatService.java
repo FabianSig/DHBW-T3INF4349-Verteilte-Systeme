@@ -38,6 +38,7 @@ public class ChatService {
     private String consumerGroupId;
 
     public OutputMessage send(Message message) {
+        log.info("User {} sent message: {}", message.getName(), message);
 
         try {
             Future<Boolean> future = executorService.submit(() -> isMessageValid(message));
@@ -62,6 +63,7 @@ public class ChatService {
     }
 
     private boolean isMessageValid(Message message) {
+        log.debug("Validating message: {}", message);
         try {
             // Call the ApiService to validate the message via API
             return apiService.validateMessage(message.getContent()).block(); // Blocking for simplicity
@@ -73,6 +75,8 @@ public class ChatService {
 
     @KafkaListener(topics = "chat")
     public void receive(MessageReceivedEvent messageReceivedEvent) {
+
+        log.debug("Received message from Kafka: {}", messageReceivedEvent.message());
 
         if (consumerGroupId.equals(messageReceivedEvent.producerID())) {
             return;
