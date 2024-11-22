@@ -56,3 +56,11 @@ services:
     depends_on:
       - server1
       - server2
+
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./llm/ollama/run:/app/run
+    entrypoint: ["/bin/sh", "/app/run/start_ollama.sh"]
