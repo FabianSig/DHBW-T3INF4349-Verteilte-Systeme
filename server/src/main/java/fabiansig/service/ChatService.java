@@ -1,6 +1,6 @@
 package fabiansig.service;
 
-import fabiansig.connectionpool.ApiService;
+import fabiansig.connectionpool.LLMService;
 import fabiansig.dto.OutputMessage;
 import fabiansig.event.MessageReceivedEvent;
 import fabiansig.model.Message;
@@ -13,11 +13,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
+import reactor.core.publisher.Mono;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +29,7 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final KafkaTemplate<String, MessageReceivedEvent> kafkaTemplate;
     private final SimpMessagingTemplate simpMessagingTemplate;
-    private final ApiService apiService;
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private final LLMService LLMService;
 
     @Value("${CONSUMER_GROUP_ID}")
     private String consumerGroupId;
@@ -41,9 +38,10 @@ public class ChatService {
         log.info("User {} sent message: {}", message.getName(), message);
 
         try {
-            Future<Boolean> future = executorService.submit(() -> isMessageValid(message));
-            boolean isValid = future.get(5, TimeUnit.SECONDS);
-            log.debug(String.valueOf(isValid));
+
+            CompletableFuture<Boolean> future = isMessageValid(message).toFuture();
+            Boolean isValid = future.get(5, TimeUnit.SECONDS);
+
             if(!isValid) {
                 log.warn("Message is invalid: {}", message);
                 return null;
@@ -62,15 +60,9 @@ public class ChatService {
         }
     }
 
-    private boolean isMessageValid(Message message) {
+    private Mono<Boolean> isMessageValid(Message message) {
         log.debug("Validating message: {}", message);
-        try {
-            // Call the ApiService to validate the message via API
-            return apiService.validateMessage(message.getContent()).block(); // Blocking for simplicity
-        } catch (Exception e) {
-            log.error("Error during API validation: {}", e.getMessage());
-            return false; // Treat errors as invalid messages
-        }
+        return LLMService.validateMessage(message.getContent());
     }
 
     @KafkaListener(topics = "chat")

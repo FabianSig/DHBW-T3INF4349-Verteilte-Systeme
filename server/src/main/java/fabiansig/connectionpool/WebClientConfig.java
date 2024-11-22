@@ -11,18 +11,16 @@ public class WebClientConfig {
 
     @Bean
     public HttpClient javaHttpClient() {
-        // Create Java 21 HttpClient with custom configurations
         return HttpClient.newBuilder()
                 .connectTimeout(java.time.Duration.ofSeconds(10))
-                .version(HttpClient.Version.HTTP_2) // Use HTTP/2 for better performance
+                .version(HttpClient.Version.HTTP_2)
                 .build();
     }
 
     @Bean
     public WebClient webClient(HttpClient httpClient) {
-        // Create a WebClient instance using Java's HttpClient
         return WebClient.builder()
-                .clientConnector(new JdkClientHttpConnector(httpClient)) // Integrate with Java HttpClient
+                .clientConnector(new JdkClientHttpConnector(httpClient))
                 .build();
     }
 }

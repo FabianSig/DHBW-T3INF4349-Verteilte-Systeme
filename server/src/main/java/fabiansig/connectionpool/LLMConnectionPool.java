@@ -5,23 +5,22 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
-public class ApiConnectionPool {
+public class LLMConnectionPool {
     private final List<String> apiUris = List.of("http://llm:8080");
     private final StringRedisTemplate redisTemplate;
 
-    public ApiConnectionPool(StringRedisTemplate redisTemplate) {
+    public LLMConnectionPool(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     public String getNextConnection() {
-
         return apiUris.get(getAtomicCounter());
     }
 
+    //Get Atomic Counter using Redis and Round Robin Strategy
     private int getAtomicCounter() {
         Long counter = redisTemplate.opsForValue().increment("apiCounter");
 
