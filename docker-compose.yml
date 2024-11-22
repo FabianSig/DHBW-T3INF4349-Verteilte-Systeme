@@ -24,6 +24,13 @@ services:
       elastic:
         condition: service_healthy
 
+  llm:
+    build:
+        context: ./llm
+        dockerfile: Dockerfile
+    ports:
+      - "8090:8080"
+
   elastic:
     image: elastic/elasticsearch:7.17.25
     ports:

@@ -43,7 +43,7 @@ public class ChatService {
         try {
             Future<Boolean> future = executorService.submit(() -> isMessageValid(message));
             boolean isValid = future.get(5, TimeUnit.SECONDS);
-
+            log.debug(String.valueOf(isValid));
             if(!isValid) {
                 log.warn("Message is invalid: {}", message);
                 return null;

@@ -8,9 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class ApiConnectionPool {
     private final List<String> apiUris = List.of(
-            "http://localhost:8081",
-            "http://localhost:8082",
-            "http://localhost:8083"
+            "http://llm:8080"
     );
     private final AtomicInteger counter = new AtomicInteger(0);
 

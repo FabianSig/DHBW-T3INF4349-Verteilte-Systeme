@@ -1,9 +1,11 @@
 package fabiansig.connectionpool;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 public class ApiService {
 
@@ -21,12 +23,16 @@ public class ApiService {
         String apiUri = apiConnectionPool.getNextConnection();
         String validationEndpoint = "/validate"; // Example validation endpoint
 
-        // Make the API call to validate the message
+        log.debug("Validation Request to: {}", apiUri + validationEndpoint);
+
         return webClient.post()
                 .uri(apiUri + validationEndpoint)
                 .bodyValue(message) // Send the message as the request body
                 .retrieve()
-                .bodyToMono(Boolean.class) // Expect a boolean response
+                .bodyToMono(String.class)
+                .map(Boolean::parseBoolean)// Expect a boolean response
+                .doOnNext(response -> log.debug("Validation Response (resolved): {}", response)) // Log the resolved response
+                .doOnError(error -> log.error("Validation failed with error: {}", error.getMessage(), error)) // Log errors
                 .onErrorReturn(false); // If there's an error, treat it as invalid
     }
 }
