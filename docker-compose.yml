@@ -68,3 +68,7 @@ services:
     depends_on:
       - server1
       - server2
+  redis:
+    image: redis:7.0-alpine
+    ports:
+      - "6379:6379"
