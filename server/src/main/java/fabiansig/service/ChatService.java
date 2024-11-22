@@ -1,5 +1,6 @@
 package fabiansig.service;
 
+import fabiansig.connectionpool.LLMService;
 import fabiansig.dto.OutputMessage;
 import fabiansig.event.MessageReceivedEvent;
 import fabiansig.model.Message;
@@ -12,6 +13,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
+import reactor.core.publisher.Mono;
+
+import java.util.concurrent.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,30 +29,46 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final KafkaTemplate<String, MessageReceivedEvent> kafkaTemplate;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final LLMService LLMService;
 
     @Value("${CONSUMER_GROUP_ID}")
     private String consumerGroupId;
 
     public OutputMessage send(Message message) {
+        log.info("User {} sent message: {}", message.getName(), message);
 
-        if (!isMessageValid(message)) {
+        try {
+
+            CompletableFuture<Boolean> future = isMessageValid(message).toFuture();
+            Boolean isValid = future.get(5, TimeUnit.SECONDS);
+
+            if(!isValid) {
+                log.warn("Message is invalid: {}", message);
+                return null;
+            }
+            log.debug("Message valid: {}", message);
+
+            messageRepository.save(message);
+
+            MessageReceivedEvent messageReceivedEvent = new MessageReceivedEvent(message, consumerGroupId);
+            kafkaTemplate.send("chat", messageReceivedEvent);
+            return new OutputMessage(HtmlUtils.htmlEscape(message.getName()), HtmlUtils.htmlEscape(message.getContent()));
+        }
+        catch (Exception e) {
+            log.error("Error validating message: {}", e.getMessage());
             return null;
         }
-
-        messageRepository.save(message);
-
-        MessageReceivedEvent messageReceivedEvent = new MessageReceivedEvent(message, consumerGroupId);
-        kafkaTemplate.send("chat", messageReceivedEvent);
-        return new OutputMessage(HtmlUtils.htmlEscape(message.getName()), HtmlUtils.htmlEscape(message.getContent()));
     }
 
-    private boolean isMessageValid(Message message) {
-        // TODO fabian hier message überprüfen
-        return true;
+    private Mono<Boolean> isMessageValid(Message message) {
+        log.debug("Validating message: {}", message);
+        return LLMService.validateMessage(message.getContent());
     }
 
     @KafkaListener(topics = "chat")
     public void receive(MessageReceivedEvent messageReceivedEvent) {
+
+        log.debug("Received message from Kafka: {}", messageReceivedEvent.message());
 
         if (consumerGroupId.equals(messageReceivedEvent.producerID())) {
             return;

@@ -9,8 +9,8 @@ services:
         - SPRING_PROFILES_ACTIVE=docker
         - CONSUMER_GROUP_ID=chat2
     depends_on:
-        - elastic
-        - broker
+      elastic:
+        condition: service_healthy
   server2:
     build:
       context: ./server
@@ -21,8 +21,15 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - CONSUMER_GROUP_ID=chat1
     depends_on:
-      - elastic
-      - broker
+      elastic:
+        condition: service_healthy
+
+  llm:
+    build:
+        context: ./llm
+        dockerfile: Dockerfile
+    ports:
+      - "8090:8080"
 
   elastic:
     image: elastic/elasticsearch:7.17.25
@@ -30,6 +37,11 @@ services:
       - "9200:9200"
     environment:
       - discovery.type=single-node
+    healthcheck:
+      test: curl -s http://elastic:9200 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 50
 
 
   broker:
@@ -56,3 +68,7 @@ services:
     depends_on:
       - server1
       - server2
+  redis:
+    image: redis:7.0-alpine
+    ports:
+      - "6379:6379"
