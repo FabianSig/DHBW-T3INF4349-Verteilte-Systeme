@@ -12,12 +12,9 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
 
 @Slf4j
@@ -40,8 +37,7 @@ public class ChatService {
 
         try {
 
-            CompletableFuture<Boolean> future = isMessageValid(message).toFuture();
-            Boolean isValid = future.get(5, TimeUnit.SECONDS);
+            boolean isValid = isMessageValid(message);
 
             if (!isValid) {
                 log.warn("Message is invalid: {}", message);
@@ -59,7 +55,7 @@ public class ChatService {
 
     }
 
-    private Mono<Boolean> isMessageValid(Message message) {
+    private boolean isMessageValid(Message message) {
 
         log.debug("Validating message: {}", message);
         return LLMService.validateMessage(message.getContent());
