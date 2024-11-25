@@ -12,13 +12,12 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.HtmlUtils;
 import reactor.core.publisher.Mono;
-
-import java.util.concurrent.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
 
 @Slf4j
@@ -34,7 +33,9 @@ public class ChatService {
     @Value("${CONSUMER_GROUP_ID}")
     private String consumerGroupId;
 
-    public OutputMessage send(Message message) {
+    //TODO use a callback to publish the message to kafka
+    public void send(Message message) {
+
         log.info("User {} sent message: {}", message.getName(), message);
 
         try {
@@ -42,9 +43,9 @@ public class ChatService {
             CompletableFuture<Boolean> future = isMessageValid(message).toFuture();
             Boolean isValid = future.get(5, TimeUnit.SECONDS);
 
-            if(!isValid) {
+            if (!isValid) {
                 log.warn("Message is invalid: {}", message);
-                return null;
+                return;
             }
             log.debug("Message valid: {}", message);
 
@@ -52,15 +53,14 @@ public class ChatService {
 
             MessageReceivedEvent messageReceivedEvent = new MessageReceivedEvent(message, consumerGroupId);
             kafkaTemplate.send("chat", messageReceivedEvent);
-            return new OutputMessage(HtmlUtils.htmlEscape(message.getName()), HtmlUtils.htmlEscape(message.getContent()));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error validating message: {}", e.getMessage());
-            return null;
         }
+
     }
 
     private Mono<Boolean> isMessageValid(Message message) {
+
         log.debug("Validating message: {}", message);
         return LLMService.validateMessage(message.getContent());
     }
@@ -70,9 +70,6 @@ public class ChatService {
 
         log.debug("Received message from Kafka: {}", messageReceivedEvent.message());
 
-        if (consumerGroupId.equals(messageReceivedEvent.producerID())) {
-            return;
-        }
         simpMessagingTemplate.convertAndSend("/topic/messages", new OutputMessage(messageReceivedEvent.message().getName(), messageReceivedEvent.message().getContent()));
     }
 
