@@ -1,7 +1,6 @@
 package fabiansig.service;
 
 import fabiansig.connectionpool.LLMService;
-import fabiansig.dto.OutputMessage;
 import fabiansig.event.MessageReceivedEvent;
 import fabiansig.model.Message;
 import fabiansig.model.User;
@@ -15,9 +14,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.StreamSupport;
 
 @Slf4j
 @Service
@@ -44,9 +41,7 @@ public class ChatService {
                 return;
             }
 
-            boolean isValid = isMessageValid(message);
-
-            if (!isValid) {
+            if (!isMessageValid(message)) {
                 log.warn("Message is invalid: {}", message);
                 User user = userRepository.findById(message.getName())
                         .orElse(User.builder().username(message.getName()).build());
@@ -74,24 +69,19 @@ public class ChatService {
     private boolean isMessageValid(Message message) {
 
         log.debug("Validating message: {}", message);
-        return !message.getContent().startsWith("Ban");//LLMService.validateMessage(message.getContent());
+        return llmService.validateMessage(message.getContent());
     }
 
     @KafkaListener(topics = "chat")
     public void receive(MessageReceivedEvent messageReceivedEvent) {
 
         log.debug("Received message from Kafka: {}", messageReceivedEvent.message());
-        simpMessagingTemplate.convertAndSend("/topic/messages", new OutputMessage(messageReceivedEvent.message().getName(), messageReceivedEvent.message().getContent()));
+        simpMessagingTemplate.convertAndSend("/topic/messages", messageReceivedEvent.message());
     }
 
-    public List<OutputMessage> getHistory() {
+    public List<Message> getHistory() {
 
-        Iterable<Message> messages = messageRepository.findAll();
-        List<OutputMessage> outputMessages = new ArrayList<>();
-
-        StreamSupport.stream(messages.spliterator(), false).map(message -> new OutputMessage(message.getName(), message.getContent())).forEach(outputMessages::add);
-
-        return outputMessages;
+        return messageRepository.findAll();
     }
 
 }

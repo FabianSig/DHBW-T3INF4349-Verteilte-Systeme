@@ -1,6 +1,5 @@
 package fabiansig.controller;
 
-import fabiansig.dto.OutputMessage;
 import fabiansig.model.Message;
 import fabiansig.service.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,7 @@ public class ChatController {
     }
 
     @SubscribeMapping("/history")
-    public List<OutputMessage> getHistory() {
+    public List<Message> getHistory() {
 
         return chatService.getHistory();
     }
