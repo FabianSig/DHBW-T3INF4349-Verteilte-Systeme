@@ -1,5 +1,7 @@
 package fabiansig.connectionpool;
 
+import fabiansig.dto.ValidationRequest;
+import fabiansig.dto.ValidationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,12 +25,18 @@ public class LLMService {
 
         log.debug("Validation Request to: {}", apiUri + validationEndpoint);
 
-        // Boolean.TRUE.equals because reponse could be null
-        return Boolean.TRUE.equals(restClient.post()
+        ValidationRequest validationRequest = new ValidationRequest(message);
+
+        ValidationResponse validationResponse = restClient.post()
                 .uri(apiUri + validationEndpoint)
-                .body(message)
+                .body(validationRequest)
                 .retrieve()
-                .body(Boolean.class));
+                .body(ValidationResponse.class);
+
+        if(validationResponse != null) {
+            return validationResponse.success().getFirst().label().equalsIgnoreCase("non_toxic");
+        }
+        return true;
 
     }
 

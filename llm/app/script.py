@@ -13,7 +13,7 @@ def validate_message():
 
     message = data['message']
 
-    classifier = pipeline('sentiment-analysis', model='ankekat1000/toxic-bert-german')
+    classifier = pipeline('text-classification', model='ml6team/distilbert-base-german-cased-toxic-comments')
 
     return jsonify({"success": classifier(message)})
 
