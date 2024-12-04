@@ -1,20 +1,18 @@
-FROM maven:3.9.8-eclipse-temurin-21 AS build
+FROM python:3.9-slim
 
-ENV HOME=/usr/app
-RUN mkdir p- ${HOME}
-WORKDIR ${HOME}
-
-COPY src ${HOME}/src
-COPY pom.xml ${HOME}
-
-RUN --mount=type=cache,target=/root/.m2 mvn -f ${HOME}/pom.xml clean package -DskipTests
-
-FROM openjdk:21-slim
-
+# Set the working directory in the container
 WORKDIR /app
 
-COPY --from=build /usr/app/target/llm-0.0.1-SNAPSHOT.jar /app/my-app.jar
+# Copy the requirements file if you have one (recommended for dependency management)
+COPY requirements.txt .
 
-EXPOSE 8080
+# Install the dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["java", "-jar", "/app/my-app.jar"]
+# Copy your Python script into the container
+COPY /app/script.py .
+
+EXPOSE 5000
+
+# Specify the command to run the script
+CMD ["python", "script.py"]
