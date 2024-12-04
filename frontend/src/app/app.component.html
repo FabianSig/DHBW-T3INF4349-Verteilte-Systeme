@@ -1,4 +1,7 @@
 <div class="app-container">
-  <h1>Welcome to the Chat Application</h1>
-  <app-chat></app-chat>
+  <span>
+    <h1>Welcome to the Chat Application,</h1>
+      <input [(ngModel)]="username" placeholder="Username"/>
+  </span>
+    <app-chat [username]="username"></app-chat>
 </div>

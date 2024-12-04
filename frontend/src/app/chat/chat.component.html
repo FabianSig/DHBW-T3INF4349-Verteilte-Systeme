@@ -1,8 +1,9 @@
 <div>
   <h2>Chat Application</h2>
-  <div *ngFor="let msg of messages">
-    {{msg}}
-  </div>
+    @for (msg of messages; track $index) {
+        <div>{{msg}}</div>
+    }
+
   <input [(ngModel)]="message" placeholder="Enter your message" />
   <button (click)="sendMessage()">Send</button>
 </div>

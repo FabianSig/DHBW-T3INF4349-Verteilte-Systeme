@@ -1,24 +1,23 @@
 package fabiansig.connectionpool;
 
+import fabiansig.dto.ValidationRequest;
+import fabiansig.dto.ValidationResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestClient;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class LLMService {
 
-    private final WebClient webClient;
     private final LLMConnectionPool LLMConnectionPool;
 
-    public LLMService(WebClient.Builder webClientBuilder, LLMConnectionPool LLMConnectionPool) {
-        this.webClient = webClientBuilder.build();
-        this.LLMConnectionPool = LLMConnectionPool;
-    }
-
     //Send Request to see if message is valid
-    public Mono<Boolean> validateMessage(String message) {
+    public boolean validateMessage(String message) {
+
+        RestClient restClient = RestClient.builder().build();
 
         //Get the next API URI from the connection pool
         String apiUri = LLMConnectionPool.getNextConnection();
@@ -26,16 +25,21 @@ public class LLMService {
 
         log.debug("Validation Request to: {}", apiUri + validationEndpoint);
 
-        return webClient.post()
+        ValidationRequest validationRequest = new ValidationRequest(message);
+
+        ValidationResponse validationResponse = restClient.post()
                 .uri(apiUri + validationEndpoint)
-                .bodyValue(message)
+                .body(validationRequest)
                 .retrieve()
-                .bodyToMono(String.class)
-                .map(Boolean::parseBoolean)
-                .doOnNext(response -> log.debug("Validation Response (resolved): {}", response))
-                .doOnError(error -> log.error("Validation failed with error: {}", error.getMessage(), error))
-                .onErrorReturn(false);
+                .body(ValidationResponse.class);
+
+        if(validationResponse != null) {
+            return validationResponse.success().getFirst().label().equalsIgnoreCase("non_toxic");
+        }
+        return true;
+
     }
+
 }
 
 

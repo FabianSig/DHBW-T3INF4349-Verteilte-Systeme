@@ -29,7 +29,7 @@ services:
         context: ./llm
         dockerfile: Dockerfile
     ports:
-      - "8090:8080"
+      - "5000:5000"
 
   elastic:
     image: elastic/elasticsearch:7.17.25
