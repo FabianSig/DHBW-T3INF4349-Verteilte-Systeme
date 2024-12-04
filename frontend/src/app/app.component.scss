@@ -1,0 +1,27 @@
+h1 {
+  display: inline;
+    margin-right: 1rem;
+}
+
+.input-box {
+  display: flex;
+  padding: 10px;
+  background: #fff;
+  border-top: 1px solid #ccc;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-right: 10px;
+  flex-grow: 0;
+}
+
+span {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}

@@ -9,19 +9,23 @@ import java.util.List;
 @Slf4j
 @Component
 public class LLMConnectionPool {
+
     private final List<String> apiUris = List.of("http://llm:8080");
     private final StringRedisTemplate redisTemplate;
 
     public LLMConnectionPool(StringRedisTemplate redisTemplate) {
+
         this.redisTemplate = redisTemplate;
     }
 
     public String getNextConnection() {
+
         return apiUris.get(getAtomicCounter());
     }
 
     //Get Atomic Counter using Redis and Round Robin Strategy
     private int getAtomicCounter() {
+
         Long counter = redisTemplate.opsForValue().increment("apiCounter");
 
         if (counter == null) {
@@ -39,5 +43,6 @@ public class LLMConnectionPool {
 
         return modValue;
     }
+
 }
 
