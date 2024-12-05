@@ -9,6 +9,10 @@ COPY requirements.txt .
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY model ./model
+
+ENV HUGGINGFACE_HUB_CACHE=/app/model
+
 # Copy your Python script into the container
 COPY /app/script.py .
 
