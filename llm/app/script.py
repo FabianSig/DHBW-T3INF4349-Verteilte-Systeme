@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from transformers import pipeline
 app = Flask(__name__)
 
+classifier = pipeline('text-classification', model='ml6team/distilbert-base-german-cased-toxic-comments', )
+
 @app.route('/validate', methods=['POST'])
 def validate_message():
     """
@@ -13,7 +15,6 @@ def validate_message():
 
     message = data['message']
 
-    classifier = pipeline('text-classification', model='ml6team/distilbert-base-german-cased-toxic-comments')
 
     return jsonify({"success": classifier(message)})
 
