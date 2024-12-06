@@ -34,7 +34,7 @@ public class LLMService {
                 .body(ValidationResponse.class);
 
         if(validationResponse != null) {
-            return validationResponse.success().getFirst().label().equalsIgnoreCase("non_toxic");
+            return validationResponse.success().getFirst().score() > 0.93;
         }
         return true;
 
