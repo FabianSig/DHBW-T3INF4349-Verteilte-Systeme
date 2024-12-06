@@ -1,9 +1,12 @@
 <div>
-  <h2>Chat Application</h2>
-    @for (msg of messages; track $index) {
-        <div>{{msg}}</div>
-    }
+    <h2>Chat Application</h2>
 
-  <input [(ngModel)]="message" placeholder="Enter your message" />
-  <button (click)="sendMessage()">Send</button>
+    <div class="chat-window">
+        @for (msg of messages; track $index) {
+            <app-message [message]="msg" [isMine]="username === msg.name"></app-message>
+        }
+    </div>
+
+    <input [(ngModel)]="message" placeholder="Enter your message"/>
+    <button (click)="sendMessage()">Send</button>
 </div>

@@ -1,6 +1,7 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {WebsocketService} from '../services/websocket.service';
 import {of} from "rxjs";
+import {ChatMessage} from "../interfaces/chat-message";
 
 @Component({
     selector: 'app-chat',
@@ -12,7 +13,7 @@ export class ChatComponent implements OnInit {
     username = '';
 
     message = '';
-    messages: string[] = [];
+    messages: ChatMessage[] = [];
 
     constructor(private readonly websocketService: WebsocketService) {
     }
@@ -26,12 +27,12 @@ export class ChatComponent implements OnInit {
                 this.messages = [];
                 messageBody.forEach((msg: any) => {
                     //TODO hier objekt kreieren
-                    this.messages.push(`${msg.name}: ${msg.content}`);
+                    this.messages.push(msg);
                 });
                 return;
             }
-            const messageBody = JSON.parse(msg.body); // Assuming the message is in JSON format
-            this.messages.push(`${messageBody.name}: ${messageBody.content}`);
+            const messageBody: ChatMessage = JSON.parse(msg.body); // Assuming the message is in JSON format
+            this.messages.push(messageBody);
         });
     }
 
