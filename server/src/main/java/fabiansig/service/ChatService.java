@@ -27,7 +27,7 @@ public class ChatService {
     private final LLMService llmService;
     private final UserRepository userRepository;
 
-    @Value("${CONSUMER_GROUP_ID}")
+    @Value("${spring.kafka.consumer.group-id}")
     private String consumerGroupId;
 
     public void send(Message message) {
