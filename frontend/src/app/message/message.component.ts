@@ -17,11 +17,18 @@ export class MessageComponent implements OnInit {
   message!: ChatMessage;
 
   @Input()
-  isMine!: boolean;
+  currentUser!: string;
 
   text = "";
 
+  cssClass: string = "";
+
   ngOnInit(): void {
     this.text = this.message.name + ": " + this.message.content;
+
+    switch(this.message.name) {
+      case this.currentUser: this.cssClass = "my-message"; break;
+      case "System": this.cssClass = "system-message"; break;
+    }
   }
 }

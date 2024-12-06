@@ -3,7 +3,7 @@
 
     <div class="chat-window">
         @for (msg of messages; track $index) {
-            <app-message [message]="msg" [isMine]="username === msg.name"></app-message>
+            <app-message [message]="msg" [currentUser]="username"></app-message>
         }
     </div>
 
