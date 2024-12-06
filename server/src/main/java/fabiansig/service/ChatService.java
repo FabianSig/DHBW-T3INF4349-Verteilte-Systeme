@@ -45,9 +45,12 @@ public class ChatService {
                 log.warn("Message is invalid: {}", message);
                 User user = userRepository.findById(message.getName())
                         .orElse(User.builder().username(message.getName()).build());
-                user.increaseStrikes();
+                boolean banned = user.increaseStrikes();
                 userRepository.save(user);
-                return;
+                if (!banned) {
+                    return;
+                }
+                message = Message.builder().name("System").content(message.getName() + " wurde gesperrt.").build();
             }
             log.debug("Message valid: {}", message);
 

@@ -21,8 +21,13 @@ public class User {
 
     private boolean banned = false;
 
-    public void increaseStrikes() {
+    /**
+     * Increases the number of strikes of the user
+     * @return true if the user is banned
+     */
+    public boolean increaseStrikes() {
         strikes++;
         banned = strikes > 3;
+        return banned;
     }
 }
