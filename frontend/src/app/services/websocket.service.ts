@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {Client, Message} from '@stomp/stompjs';
 import * as SockJS from 'sockjs-client';
 import {Observable} from 'rxjs';
+import {ChatMessage} from "../interfaces/chat-message";
 
 @Injectable({
     providedIn: 'root'
@@ -44,7 +45,7 @@ export class WebsocketService {
     }
 
     // Send a message to /app/message
-    sendMessage(msg: any) {
+    sendMessage(msg: ChatMessage) {
         this.client.publish({
             destination: '/app/message',
             body: JSON.stringify(msg)
