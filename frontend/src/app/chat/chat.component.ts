@@ -29,10 +29,11 @@ export class ChatComponent implements OnInit {
                     //TODO hier objekt kreieren
                     this.messages.push(msg);
                 });
+                this.messages.reverse()
                 return;
             }
             const messageBody: ChatMessage = JSON.parse(msg.body); // Assuming the message is in JSON format
-            this.messages.push(messageBody);
+            this.messages.unshift(messageBody);
         });
     }
 

@@ -2,7 +2,7 @@
     <h2>Chat Application</h2>
 
     <div class="chat-window">
-        @for (msg of messages; track $index) {
+        @for (msg of messages; track msg.timestamp) {
             <app-message [message]="msg" [currentUser]="username"></app-message>
         }
     </div>
