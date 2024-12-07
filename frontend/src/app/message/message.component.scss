@@ -1,0 +1,33 @@
+:host {
+  width: 100%;
+}
+
+.message-container {
+  flex-grow: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+}
+
+.text {
+  padding: 0.5rem;
+  background: #e6e6e6;
+  border-radius: 5px;
+}
+
+.my-message {
+  align-items: end;
+
+  .text {
+    background: #007bff;
+  }
+}
+
+.system-message {
+  align-items: center;
+
+  .text {
+    background: aqua;
+  }
+}
