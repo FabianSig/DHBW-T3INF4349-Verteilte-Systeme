@@ -9,9 +9,7 @@ services:
       elastic:
         condition: service_healthy
     deploy:
-      replicas: 3
-
-
+      replicas: 2
 
   llm:
     build:
@@ -49,6 +47,7 @@ services:
       - "9092:9092"
       - "29092:29092"
     environment:
+      # So viel Konfiguration, um KRaft zu aktivieren, da Zookeeper für Kafka deprecated ist
       KAFKA_BROKER_ID: 1
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -77,4 +76,4 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     deploy:
-      replicas: 3
+      replicas: 1
