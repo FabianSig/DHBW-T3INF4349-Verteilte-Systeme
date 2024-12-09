@@ -10,7 +10,7 @@ import java.util.List;
 @Component
 public class LLMConnectionPool {
 
-    private final List<String> apiUris = List.of("http://llm:5000");
+    private final List<String> apiUris = List.of("http://llm:5000", "http://llm1:5000", "http://llm2:5000");
     private final StringRedisTemplate redisTemplate;
 
     public LLMConnectionPool(StringRedisTemplate redisTemplate) {
