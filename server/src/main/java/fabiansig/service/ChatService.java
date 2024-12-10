@@ -1,14 +1,12 @@
 package fabiansig.service;
 
 import fabiansig.connectionpool.LLMService;
-import fabiansig.event.MessageReceivedEvent;
 import fabiansig.model.Message;
 import fabiansig.model.User;
 import fabiansig.repository.MessageRepository;
 import fabiansig.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -22,13 +20,10 @@ import java.util.List;
 public class ChatService {
 
     private final MessageRepository messageRepository;
-    private final KafkaTemplate<String, MessageReceivedEvent> kafkaTemplate;
+    private final KafkaTemplate<String, Message> kafkaTemplate;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final LLMService llmService;
     private final UserRepository userRepository;
-
-    @Value("${spring.kafka.consumer.group-id}")
-    private String consumerGroupId;
 
     public void send(Message message) {
 
@@ -56,8 +51,7 @@ public class ChatService {
 
             messageRepository.save(message);
 
-            MessageReceivedEvent messageReceivedEvent = new MessageReceivedEvent(message, consumerGroupId);
-            kafkaTemplate.send("chat", messageReceivedEvent);
+            kafkaTemplate.send("chat", message);
         } catch (Exception e) {
             log.error("Error validating message: {}", e.getMessage());
         }
@@ -76,10 +70,10 @@ public class ChatService {
     }
 
     @KafkaListener(topics = "chat")
-    public void receive(MessageReceivedEvent messageReceivedEvent) {
+    public void receive(Message message) {
 
-        log.debug("Received message from Kafka: {}", messageReceivedEvent.message());
-        simpMessagingTemplate.convertAndSend("/topic/messages", messageReceivedEvent.message());
+        log.debug("Received message from Kafka: {}", message);
+        simpMessagingTemplate.convertAndSend("/topic/messages", message);
     }
 
     public List<Message> getHistory() {
