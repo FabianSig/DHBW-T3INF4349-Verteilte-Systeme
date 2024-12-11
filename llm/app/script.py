@@ -4,7 +4,7 @@ from transformers import pipeline
 app = Flask(__name__)
 
 german_classifier = pipeline('text-classification', model='ml6team/distilbert-base-german-cased-toxic-comments')
-multilingual_classifier = pipeline('text-classification', model='unitary/multilingual-toxic-xlmr-roberta')
+multilingual_classifier = pipeline('text-classification', model='unitary/multilingual-toxic-xlm-roberta')
 
 @app.route('/validate', methods=['POST'])
 def validate_message():
