@@ -1,7 +1,7 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {WebsocketService} from '../services/websocket.service';
-import {of} from "rxjs";
 import {ChatMessage} from "../interfaces/chat-message";
+import {HistoryService} from "../services/history.service";
 
 @Component({
     selector: 'app-chat',
@@ -15,25 +15,25 @@ export class ChatComponent implements OnInit {
     message = '';
     messages: ChatMessage[] = [];
 
-    constructor(private readonly websocketService: WebsocketService) {
+    constructor(private readonly websocketService: WebsocketService, private readonly historyService: HistoryService) {
     }
 
     ngOnInit(): void {
+        // Get chat history from localStorage and missing messages from backend
+        const history = localStorage.getItem("history") ?? "[]"
+
+        this.messages = JSON.parse(history)
+
+        this.historyService.getHistory(this.messages.at(0)?.timestamp ?? 0).subscribe(msgs => msgs.forEach((msg: any) => {
+            this.messages.unshift(msg);
+        }))
+        this.saveHistory();
+
         // Subscribe to messages from the WebSocket server
         this.websocketService.subscribeToMessages().subscribe((msg) => {
-            //falls es ein array ist, anders parsen
-            if (msg.body.includes("[")) {
-                const messageBody = JSON.parse(msg.body); // Assuming the message is in JSON format
-                this.messages = [];
-                messageBody.forEach((msg: any) => {
-                    //TODO hier objekt kreieren
-                    this.messages.push(msg);
-                });
-                this.messages.reverse()
-                return;
-            }
             const messageBody: ChatMessage = JSON.parse(msg.body); // Assuming the message is in JSON format
             this.messages.unshift(messageBody);
+            this.saveHistory();
         });
     }
 
@@ -47,5 +47,8 @@ export class ChatComponent implements OnInit {
         this.message = '';
     }
 
-    protected readonly of = of;
+    private saveHistory() {
+        localStorage.setItem("history", JSON.stringify(this.messages));
+    }
+
 }
