@@ -1,6 +1,7 @@
 package fabiansig.service;
 
 import fabiansig.connectionpool.LLMService;
+import fabiansig.factory.MessageFactory;
 import fabiansig.model.Message;
 import fabiansig.model.User;
 import fabiansig.repository.MessageRepository;
@@ -11,8 +12,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -36,18 +35,7 @@ public class ChatService {
                 return;
             }
 
-            if (!isMessageValid(message)) {
-                log.warn("Message is invalid: {}", message);
-                User user = userRepository.findById(message.getName())
-                        .orElse(User.builder().username(message.getName()).build());
-                boolean banned = user.increaseStrikes();
-                userRepository.save(user);
-                if (!banned) {
-                    return;
-                }
-                message = Message.builder().name("System").content(message.getName() + " wurde gesperrt.").build();
-            }
-            log.debug("Message valid: {}", message);
+            message = handleMessageValidation(message);
 
             messageRepository.save(message);
 
@@ -63,6 +51,21 @@ public class ChatService {
         return userRepository.findById(message.getName()).map(User::isBanned).orElse(false);
     }
 
+    private Message handleMessageValidation(Message message) {
+
+        if (isMessageValid(message)) {
+            log.debug("Message valid: {}", message);
+            return message;
+        }
+        log.warn("Message is invalid: {}", message);
+
+        User user = userRepository.findById(message.getName()).orElse(new User(message.getName()));
+        boolean banned = user.increaseStrikes();
+        userRepository.save(user);
+
+        return MessageFactory.createStrikedMessage(message.getName(), banned);
+    }
+
     private boolean isMessageValid(Message message) {
 
         log.debug("Validating message: {}", message);
@@ -74,11 +77,6 @@ public class ChatService {
 
         log.debug("Received message from Kafka: {}", message);
         simpMessagingTemplate.convertAndSend("/topic/messages", message);
-    }
-
-    public List<Message> getHistory(long timestamp) {
-
-        return messageRepository.findAllMessagesByTimestampGreaterThan(timestamp);
     }
 
 }

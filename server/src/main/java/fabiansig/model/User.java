@@ -30,4 +30,8 @@ public class User {
         banned = strikes > 3;
         return banned;
     }
+
+    public User(String username) {
+        this.username = username;
+    }
 }
