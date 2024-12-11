@@ -76,9 +76,9 @@ public class ChatService {
         simpMessagingTemplate.convertAndSend("/topic/messages", message);
     }
 
-    public List<Message> getHistory() {
+    public List<Message> getHistory(long timestamp) {
 
-        return messageRepository.findAll();
+        return messageRepository.findAllMessagesByTimestampGreaterThan(timestamp);
     }
 
 }
