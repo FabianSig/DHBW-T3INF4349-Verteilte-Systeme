@@ -5,8 +5,10 @@ import fabiansig.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 
@@ -24,10 +26,10 @@ public class ChatController {
         chatService.send(message);
     }
 
-    @SubscribeMapping("/history")
-    public List<Message> getHistory() {
+    @GetMapping("/history")
+    public @ResponseBody List<Message> getHistory(@RequestParam long timestamp) {
 
-        return chatService.getHistory();
+        return chatService.getHistory(timestamp);
     }
 
 }
