@@ -33,12 +33,16 @@ services:
       - "5000:5000"
 
   llm1:
-    image: dhbw-t3inf4349-verteilte-systeme-llm:latest
+    build:
+      context: ./llm
+      dockerfile: Dockerfile
     ports:
       - "5001:5000"
 
   llm2:
-    image: dhbw-t3inf4349-verteilte-systeme-llm:latest
+    build:
+      context: ./llm
+      dockerfile: Dockerfile
     ports:
       - "5002:5000"
 
