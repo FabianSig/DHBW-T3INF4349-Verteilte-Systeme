@@ -1,4 +1,4 @@
-FROM nikomitk/python-transformers-toxic:slim-cpu
+FROM nikomitk/python-transformers-toxic:cpu
 
 WORKDIR /app
 
