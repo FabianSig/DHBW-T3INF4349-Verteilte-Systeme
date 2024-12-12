@@ -27,7 +27,7 @@ public class User {
      */
     public boolean increaseStrikes() {
         strikes++;
-        banned = strikes > 3;
+        banned = strikes > 2;
         return banned;
     }
 
