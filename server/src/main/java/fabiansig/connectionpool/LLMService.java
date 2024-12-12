@@ -50,7 +50,7 @@ public class LLMService {
                     return false;
                 }
             } catch (Exception e) {
-                log.error("Error during validation with {}: {}. Connection offline", apiUri, e.getMessage());
+                log.error("Error during validation with {}. Connection offline", apiUri);
                 attempts++;
             }
         }
