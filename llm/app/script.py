@@ -10,7 +10,7 @@ multilingual_classifier = pipeline('text-classification', model='unitary/multili
 def validate_message():
     app.logger.info("Validating message: %s", request.json)
     data = request.json  # Get JSON data from the request body
-    if data or 'message' not in data:
+    if not data or 'message' not in data:
         return jsonify({"success": False, "error": "Message is required"}), 400
 
     message = data['message']
