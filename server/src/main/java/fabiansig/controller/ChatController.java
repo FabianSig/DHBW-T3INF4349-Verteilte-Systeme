@@ -25,12 +25,5 @@ public class ChatController {
 
         chatService.send(message);
     }
-
-    @GetMapping("/history")
-    public @ResponseBody List<Message> getHistory(@RequestParam long timestamp) {
-
-        return chatService.getHistory(timestamp);
-    }
-
 }
 

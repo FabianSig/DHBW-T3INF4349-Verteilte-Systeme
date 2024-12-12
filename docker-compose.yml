@@ -12,6 +12,19 @@ services:
       replicas: 2
     restart: always
 
+  history:
+    build:
+      context: ./historyService
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      elastic:
+        condition: service_healthy
+    deploy:
+      replicas: 3
+    restart: always
+
   llm:
     build:
         context: ./llm
