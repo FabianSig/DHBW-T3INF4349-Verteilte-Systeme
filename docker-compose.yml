@@ -26,12 +26,12 @@ services:
     ports:
       - "5001:5000"
 
-#  llm2:
-#    build:
-#      context: ./llm
-#      dockerfile: Dockerfile
-#    ports:
-#      - "5002:5000"
+  llm2:
+    build:
+      context: ./llm
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5000"
 
   elastic:
     image: elastic/elasticsearch:7.17.25
