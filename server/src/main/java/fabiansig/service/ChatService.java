@@ -1,6 +1,6 @@
 package fabiansig.service;
 
-import fabiansig.connectionpool.LLMService;
+import fabiansig.connectionpool.AIService;
 import fabiansig.factory.MessageFactory;
 import fabiansig.model.Message;
 import fabiansig.model.User;
@@ -21,7 +21,7 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final KafkaTemplate<String, Message> kafkaTemplate;
     private final SimpMessagingTemplate simpMessagingTemplate;
-    private final LLMService llmService;
+    private final AIService aiService;
     private final UserRepository userRepository;
 
     public void send(Message message) {
@@ -69,7 +69,7 @@ public class ChatService {
     private boolean isMessageValid(Message message) {
 
         log.debug("Validating message: {}", message);
-        return llmService.validateMessage(message.getContent());
+        return aiService.validateMessage(message.getContent());
     }
 
     @KafkaListener(topics = "chat")

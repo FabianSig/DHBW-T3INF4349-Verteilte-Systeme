@@ -10,9 +10,9 @@ import org.springframework.web.client.RestClient;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LLMService {
+public class AIService {
 
-    private final LLMConnectionPool llmConnectionPool;
+    private final AIConnectionPool aiConnectionPool;
 
     //Send Request to see if message is valid
     public boolean validateMessage(String message) {
@@ -27,10 +27,10 @@ public class LLMService {
 
         // Anfragen in while, damit wir andere connection anfragen, wenn eine andere nicht funktioniert.
         // Das machen wir solange, bis wir alle connections probiert haben, oder eine funktionierende connection uns ein Ergebnis geliefert hat
-        while (attempts < llmConnectionPool.getPoolSize()) {
+        while (attempts < aiConnectionPool.getPoolSize()) {
 
             //Get the next API URI from the connection pool
-            String apiUri = llmConnectionPool.getNextConnection();
+            String apiUri = aiConnectionPool.getNextConnection();
             log.debug("Validation Request to: {}; Attempt: {}", apiUri + validationEndpoint, attempts);
 
             try {

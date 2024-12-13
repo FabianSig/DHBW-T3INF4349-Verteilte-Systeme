@@ -7,14 +7,14 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class LLMConnectionPool {
+public class AIConnectionPool {
 
     private static final String COUNTER_NAME = "apiCounter";
     private final StringRedisTemplate redisTemplate;
-    @Value("${llm.hostnames}")
+    @Value("${ai.hostnames}")
     private String[] apiUris;
 
-    public LLMConnectionPool(StringRedisTemplate redisTemplate) {
+    public AIConnectionPool(StringRedisTemplate redisTemplate) {
 
         this.redisTemplate = redisTemplate;
     }
@@ -39,7 +39,7 @@ public class LLMConnectionPool {
         // Reset the counter to the modulus result to prevent the value from growing indefinitely
         if (counter > Integer.MAX_VALUE) {
             redisTemplate.opsForValue().set(COUNTER_NAME, String.valueOf((long) modValue));
-            log.info("Counter reset to: {}", modValue);
+            log.debug("Counter reset to: {}", modValue);
         }
 
         return modValue;
