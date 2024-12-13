@@ -26,19 +26,18 @@ public class LLMService {
 
 
     /**
-     * Validiert eine Nachricht durch Senden einer Anforderungsanfrage an einen externen LLM-Dienst.
+     * Validates a message by sending a request to an external LLM service.
      * <p>
-     * Die Methode versucht n mal (wobei n die Anzahl der vorhandenen Connections im ConnectionPool ist), die Nachricht durch den LLM-Service validieren zu lassen,
-     * wobei bei jedem Versuch eine Verbindung aus dem Connectionpool verwendet wird.
-     * Wenn keine Verbindung verfügbar ist oder alle Versuche fehlschlagen, wird die Validierung
-     * als fehlgeschlagen gelogt und die Nachricht als valide gekennzeichnet.
+     * The method attempts n times (where n is the number of available connections in the ConnectionPool)
+     * to validate the message through the LLM service, using a different connection from the pool for each attempt.
+     * If no connection is available or all attempts fail, the validation is logged as failed,
+     * and the message is marked as valid by default.
      * </p>
      *
-     * @param message Die zu validierende Nachricht.
-     * @return {@code true}, wenn die Nachricht als "non_toxic" mit ausreichender Confidence
-     *         validiert wurde; andernfalls {@code false}.
+     * @param message The message to be validated.
+     * @return {@code true} if the message is validated as "non_toxic" with sufficient confidence;
+     *         otherwise {@code false}.
      */
-
     public boolean validateMessage(String message) {
         try {
             return retryTemplate.execute(context -> {

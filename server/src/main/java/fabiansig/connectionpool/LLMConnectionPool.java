@@ -25,8 +25,8 @@ public class LLMConnectionPool {
     }
 
     /**
-     * Gibt den nächst verfügbare Connection-Index mithilfe von Round Robin und Redis
-     * @return Nächster verfügbarer Connection-Index
+     * Returns the next available connection index using Round Robin and Redis.
+     * @return Next available connection index
      */
     private int getNextConnectionPoolIndex() {
 
