@@ -10,9 +10,9 @@ import java.util.List;
 @Component
 public class LLMConnectionPool {
 
-    private static final List<String> apiUris = List.of("http://localhost5000", "http://localhost:5001", "http://localhost:5002");
+    private static final List<String> apiUris = List.of("http://llm:5000", "http://llm1:5000", "http://llm2:5000");
     private final StringRedisTemplate redisTemplate;
-    public final static int POOL_SIZE = apiUris.size();
+    public static final int POOL_SIZE = apiUris.size();
 
     public LLMConnectionPool(StringRedisTemplate redisTemplate) {
 
