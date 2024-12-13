@@ -21,7 +21,7 @@ public class Message {
 
     private String name;
 
-    // TODO soll vom frontend mitgeschickt werden
+    @Builder.Default
     private long timestamp = System.currentTimeMillis();
 
 }

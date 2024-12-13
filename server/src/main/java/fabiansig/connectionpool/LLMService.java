@@ -12,7 +12,7 @@ import org.springframework.web.client.RestClient;
 @RequiredArgsConstructor
 public class LLMService {
 
-    private final LLMConnectionPool LLMConnectionPool;
+    private final LLMConnectionPool llmConnectionPool;
 
     //Send Request to see if message is valid
     public boolean validateMessage(String message) {
@@ -27,10 +27,10 @@ public class LLMService {
 
         // Anfragen in while, damit wir andere connection anfragen, wenn eine andere nicht funktioniert.
         // Das machen wir solange, bis wir alle connections probiert haben, oder eine funktionierende connection uns ein Ergebnis geliefert hat
-        while (attempts < fabiansig.connectionpool.LLMConnectionPool.POOL_SIZE) {
+        while (attempts < llmConnectionPool.getPoolSize()) {
 
             //Get the next API URI from the connection pool
-            String apiUri = LLMConnectionPool.getNextConnection();
+            String apiUri = llmConnectionPool.getNextConnection();
             log.debug("Validation Request to: {}; Attempt: {}", apiUri + validationEndpoint, attempts);
 
             try {
@@ -55,7 +55,7 @@ public class LLMService {
             }
         }
         log.error("All validation attempts failed. No available connections. No Validation for current Message.");
-        return true;
+        return false;
     }
 
 }

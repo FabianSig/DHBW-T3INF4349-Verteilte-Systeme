@@ -17,8 +17,10 @@ public class User {
     @Id
     private String username;
 
+    @Builder.Default
     private int strikes = 0;
 
+    @Builder.Default
     private boolean banned = false;
 
     /**
