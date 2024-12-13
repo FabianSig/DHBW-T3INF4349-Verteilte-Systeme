@@ -29,20 +29,35 @@ export class WebsocketService {
 
         // if the websocket server fails, reload the page to establish a new connection and automatically fetch missing messages
         this.client.onWebSocketClose = () => {
-            location.reload();
+            let retryCount = parseInt(localStorage.getItem('retry') ?? "0");
+            localStorage.setItem('retry', "" + ++retryCount);
+
+            if (retryCount === 3) {
+                alert("The server is not responding. Please try again later.");
+            }
+
+            // to avoid spam of the reload, add a delay when retrying more than 2 times
+            setTimeout(() => {
+                location.reload();
+            }, 3000 + 10000 * (retryCount % (retryCount - 1)));
         }
+
     }
 
     /** Subscribe to messages sent to the /topic/messages
      * @returns Observable<Message>
      */
-    subscribeToMessages(): Observable<Message> {
+    subscribeToMessages()
+        :
+        Observable<Message> {
         return new Observable<Message>(observer => {
+
             this.client.onConnect = () => {
+                localStorage.removeItem('retry');
+
                 this.client.subscribe('/topic/messages', message => {
                     observer.next(message);
                 });
-
             };
         });
     }
@@ -51,7 +66,10 @@ export class WebsocketService {
      *
      * @param msg
      */
-    sendMessage(msg: ChatMessage) {
+    sendMessage(msg
+                :
+                ChatMessage
+    ) {
         this.client.publish({
             destination: '/app/message',
             body: JSON.stringify(msg)
