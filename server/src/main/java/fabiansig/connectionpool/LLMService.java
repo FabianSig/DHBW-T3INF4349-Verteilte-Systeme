@@ -16,12 +16,13 @@ public class LLMService {
     private final LLMConnectionPool llmConnectionPool;
     @Value("${llm.confidence.threshold}")
     private float confidenceThreshold;
+    private final RestClient restClient;
+
 
 
     //Send Request to see if message is valid
     public boolean validateMessage(String message) {
 
-        RestClient restClient = RestClient.builder().build();
         ValidationRequest validationRequest = new ValidationRequest(message);
         ValidationResponse validationResponse;
         String validationEndpoint = "/validate";
