@@ -4,65 +4,69 @@ import fabiansig.dto.ValidationRequest;
 import fabiansig.dto.ValidationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestClientException;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class LLMService {
 
-    private final LLMConnectionPool llmConnectionPool;
+
     private final RestClient restClient;
+    private final RetryTemplate retryTemplate;
+    private final LLMConnectionPool llmConnectionPool;
     @Value("${llm.confidence.threshold}")
     private float confidenceThreshold;
     @Value("${llm.hostnames.endpoint}")
     private  String validationEndpoint;
 
 
+    /**
+     * Validiert eine Nachricht durch Senden einer Anforderungsanfrage an einen externen LLM-Dienst.
+     * <p>
+     * Die Methode versucht n mal (wobei n die Anzahl der vorhandenen Connections im ConnectionPool ist), die Nachricht durch den LLM-Service validieren zu lassen,
+     * wobei bei jedem Versuch eine Verbindung aus dem Connectionpool verwendet wird.
+     * Wenn keine Verbindung verfügbar ist oder alle Versuche fehlschlagen, wird die Validierung
+     * als fehlgeschlagen gelogt und die Nachricht als valide gekennzeichnet.
+     * </p>
+     *
+     * @param message Die zu validierende Nachricht.
+     * @return {@code true}, wenn die Nachricht als "non_toxic" mit ausreichender Confidence
+     *         validiert wurde; andernfalls {@code false}.
+     */
 
-    //Send Request to see if message is valid
     public boolean validateMessage(String message) {
+        try {
+            return retryTemplate.execute(context -> {
+                int attempts = context.getRetryCount() + 1;
+                String apiUri = llmConnectionPool.getNextConnection();
 
-        ValidationRequest validationRequest = new ValidationRequest(message);
-        ValidationResponse validationResponse;
+                log.info("Attempt {}: Sending request to {}", attempts, apiUri + validationEndpoint);
 
-
-
-        int attempts = 0;
-
-        // Anfragen in while, damit wir andere connection anfragen, wenn eine andere nicht funktioniert.
-        // Das machen wir solange, bis wir alle connections probiert haben, oder eine funktionierende connection uns ein Ergebnis geliefert hat
-        while (attempts < llmConnectionPool.getPoolSize()) {
-
-            //Get the next API URI from the connection pool
-            String apiUri = llmConnectionPool.getNextConnection();
-            log.debug("Validation Request to: {}; Attempt: {}", apiUri + validationEndpoint, attempts);
-
-            try {
-                validationResponse = restClient.post()
+                ValidationRequest request = new ValidationRequest(message);
+                ValidationResponse validationResponse = restClient.post()
                         .uri(apiUri + validationEndpoint)
-                        .body(validationRequest)
+                        .body(request)
                         .retrieve()
                         .body(ValidationResponse.class);
 
-                log.debug("Validation Response: {}", validationResponse);
-
                 if (validationResponse != null &&
-                        validationResponse.success().getFirst().label().equalsIgnoreCase("non_toxic") && validationResponse.success().getFirst().score() > this.confidenceThreshold) {
+                        "non_toxic".equalsIgnoreCase(validationResponse.success().getFirst().label()) &&
+                        validationResponse.success().getFirst().score() > this.confidenceThreshold) {
+                    log.info("Message validation succeeded.");
                     return true;
-                } else {
-                    log.warn("Validation failed for message: {}", message);
-                    return false;
                 }
-            } catch (Exception e) {
-                log.error("Error during validation with {}. Connection offline", apiUri);
-                attempts++;
-            }
+
+                throw new RestClientException("Validation failed");
+            });
+        } catch (RestClientException e) {
+            log.error("All retries failed. No service available.");
+            return true;
         }
-        log.error("All validation attempts failed. No available connections. No Validation for current Message.");
-        return false;
     }
 
 }
