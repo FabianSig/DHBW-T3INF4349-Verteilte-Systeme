@@ -22,29 +22,29 @@ services:
       elastic:
         condition: service_healthy
     deploy:
-      replicas: 1
+      replicas: 3
     restart: always
 
-  ai:
+  llm:
     build:
-        context: ai
+        context: ./llm
         dockerfile: Dockerfile
     ports:
       - "5000:5000"
 
-#  ai1:
-#    build:
-#      context: ./ai
-#      dockerfile: Dockerfile
-#    ports:
-#      - "5001:5000"
-#
-#  ai2:
-#    build:
-#      context: ./ai
-#      dockerfile: Dockerfile
-#    ports:
-#      - "5002:5000"
+  llm1:
+    build:
+      context: ./llm
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"
+
+  llm2:
+    build:
+      context: ./llm
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5000"
 
   elastic:
     image: elastic/elasticsearch:7.17.25
