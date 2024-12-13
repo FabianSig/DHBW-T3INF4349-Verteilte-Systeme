@@ -24,7 +24,11 @@ export class WebsocketService {
         });
 
         this.client.activate();
-        this.client.logRawCommunication = true
+
+        // if the websocket server fails, reload the page to establish a new connection and automatically fetch missing messages
+        this.client.onWebSocketClose = () => {
+            location.reload();
+        }
     }
 
     // Subscribe to messages sent to the /topic/messages
