@@ -14,9 +14,11 @@ import org.springframework.beans.factory.annotation.Value;
 public class LLMService {
 
     private final LLMConnectionPool llmConnectionPool;
+    private final RestClient restClient;
     @Value("${llm.confidence.threshold}")
     private float confidenceThreshold;
-    private final RestClient restClient;
+    @Value("${llm.hostnames.endpoint}")
+    private  String validationEndpoint;
 
 
 
@@ -25,7 +27,7 @@ public class LLMService {
 
         ValidationRequest validationRequest = new ValidationRequest(message);
         ValidationResponse validationResponse;
-        String validationEndpoint = "/validate";
+
 
 
         int attempts = 0;
