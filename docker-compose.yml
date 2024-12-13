@@ -9,7 +9,7 @@ services:
       elastic:
         condition: service_healthy
     deploy:
-      replicas: 2
+      replicas: 3
     restart: always
 
   history:

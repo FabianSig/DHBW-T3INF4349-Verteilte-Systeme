@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 @Service
@@ -13,6 +14,9 @@ import org.springframework.web.client.RestClient;
 public class LLMService {
 
     private final LLMConnectionPool llmConnectionPool;
+    @Value("${llm.confidence.threshold}")
+    private float confidenceThreshold;
+
 
     //Send Request to see if message is valid
     public boolean validateMessage(String message) {
@@ -43,7 +47,7 @@ public class LLMService {
                 log.debug("Validation Response: {}", validationResponse);
 
                 if (validationResponse != null &&
-                        validationResponse.success().getFirst().label().equalsIgnoreCase("non_toxic")) {
+                        validationResponse.success().getFirst().label().equalsIgnoreCase("non_toxic") && validationResponse.success().getFirst().score() > this.confidenceThreshold) {
                     return true;
                 } else {
                     log.warn("Validation failed for message: {}", message);
