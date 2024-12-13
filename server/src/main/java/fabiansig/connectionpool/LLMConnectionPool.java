@@ -21,32 +21,25 @@ public class LLMConnectionPool {
 
     public String getNextConnection() {
 
-        return "http://" + apiUris[getAtomicCounter()];
+        return apiUris[getNextConnectionPoolIndex()];
     }
 
-    //Get Atomic Counter using Redis and Round Robin Strategy
-    private int getAtomicCounter() {
+    /**
+     * Gibt den nächst verfügbare Connection-Index mithilfe von Round Robin und Redis
+     * @return Nächster verfügbarer Connection-Index
+     */
+    private int getNextConnectionPoolIndex() {
 
-        Long counter = redisTemplate.opsForValue().increment(COUNTER_NAME);
+        Long counter = redisTemplate.opsForValue().increment(COUNTER_NAME, 1);
 
         if (counter == null) {
-            redisTemplate.opsForValue().set(COUNTER_NAME, "0");
-            counter = 0L;
+            throw new IllegalStateException("Redis increment operation returned null.");
         }
 
-        int modValue = (int) (counter % apiUris.length);
-
-        // Reset the counter to the modulus result to prevent the value from growing indefinitely
-        if (counter > Integer.MAX_VALUE) {
-            redisTemplate.opsForValue().set(COUNTER_NAME, String.valueOf((long) modValue));
-            log.info("Counter reset to: {}", modValue);
-        }
-
-        return modValue;
+        return (int) (counter % apiUris.length);
     }
 
     public int getPoolSize() {
-
         return apiUris.length;
     }
 
