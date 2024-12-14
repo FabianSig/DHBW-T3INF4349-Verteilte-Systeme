@@ -19,7 +19,6 @@ public class ChatController {
 
     private final ChatService chatService;
 
-
     @MessageMapping("/message")
     public void send(Message message) {
 

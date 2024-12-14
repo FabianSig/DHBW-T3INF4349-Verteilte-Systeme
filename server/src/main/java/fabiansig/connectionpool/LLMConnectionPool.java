@@ -1,5 +1,6 @@
 package fabiansig.connectionpool;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class LLMConnectionPool {
 
     private static final String COUNTER_NAME = "apiCounter";
@@ -14,39 +16,28 @@ public class LLMConnectionPool {
     @Value("${llm.hostnames}")
     private String[] apiUris;
 
-    public LLMConnectionPool(StringRedisTemplate redisTemplate) {
-
-        this.redisTemplate = redisTemplate;
-    }
 
     public String getNextConnection() {
 
-        return "http://" + apiUris[getAtomicCounter()];
+        return apiUris[getNextConnectionPoolIndex()];
     }
 
-    //Get Atomic Counter using Redis and Round Robin Strategy
-    private int getAtomicCounter() {
+    /**
+     * Returns the next available connection index using Round Robin and Redis.
+     * @return Next available connection index
+     */
+    private int getNextConnectionPoolIndex() {
 
-        Long counter = redisTemplate.opsForValue().increment(COUNTER_NAME);
+        Long counter = redisTemplate.opsForValue().increment(COUNTER_NAME, 1);
 
         if (counter == null) {
-            redisTemplate.opsForValue().set(COUNTER_NAME, "0");
-            counter = 0L;
+            throw new IllegalStateException("Redis increment operation returned null.");
         }
 
-        int modValue = (int) (counter % apiUris.length);
-
-        // Reset the counter to the modulus result to prevent the value from growing indefinitely
-        if (counter > Integer.MAX_VALUE) {
-            redisTemplate.opsForValue().set(COUNTER_NAME, String.valueOf((long) modValue));
-            log.info("Counter reset to: {}", modValue);
-        }
-
-        return modValue;
+        return (int) (counter % apiUris.length);
     }
 
     public int getPoolSize() {
-
         return apiUris.length;
     }
 
