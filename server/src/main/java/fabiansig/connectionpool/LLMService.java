@@ -59,12 +59,13 @@ public class LLMService {
                     log.info("Message validation succeeded.");
                     return true;
                 }
-
+                // Throwing an exception when validation fails. This triggers the retryTemplate to retry validation using a different connection in the pool
                 throw new RestClientException("Validation failed");
             });
         } catch (RestClientException e) {
+            // Catching the last RestClientException after n tries.
             log.error("All retries failed. No service available.");
-            return true;
+            return true; // Default value when all retries fail, e.g. if the service is offline
         }
     }
 
