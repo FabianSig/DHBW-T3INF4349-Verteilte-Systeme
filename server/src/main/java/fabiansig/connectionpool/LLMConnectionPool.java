@@ -1,5 +1,6 @@
 package fabiansig.connectionpool;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class LLMConnectionPool {
 
     private static final String COUNTER_NAME = "apiCounter";
@@ -14,10 +16,6 @@ public class LLMConnectionPool {
     @Value("${llm.hostnames}")
     private String[] apiUris;
 
-    public LLMConnectionPool(StringRedisTemplate redisTemplate) {
-
-        this.redisTemplate = redisTemplate;
-    }
 
     public String getNextConnection() {
 
