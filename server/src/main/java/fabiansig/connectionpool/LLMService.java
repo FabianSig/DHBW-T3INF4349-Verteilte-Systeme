@@ -6,17 +6,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.client.RestClientException;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class LLMService {
 
-
-    private final RestClient restClient;
+    private final WebClient webClient;
     private final RetryTemplate retryTemplate;
     private final LLMConnectionPool llmConnectionPool;
     @Value("${llm.confidence.threshold}")
@@ -47,11 +46,12 @@ public class LLMService {
                 log.info("Attempt {}: Sending request to {}", attempts, apiUri + validationEndpoint);
 
                 ValidationRequest request = new ValidationRequest(message);
-                ValidationResponse validationResponse = restClient.post()
+                ValidationResponse validationResponse = webClient.post()
                         .uri(apiUri + validationEndpoint)
-                        .body(request)
+                        .bodyValue(request)
                         .retrieve()
-                        .body(ValidationResponse.class);
+                        .bodyToMono(ValidationResponse.class)
+                        .toFuture().join();
 
                 if (validationResponse != null &&
                         "non_toxic".equalsIgnoreCase(validationResponse.success().getFirst().label()) &&
@@ -60,12 +60,11 @@ public class LLMService {
                     return true;
                 }
                 // Throwing an exception when validation fails. This triggers the retryTemplate to retry validation using a different connection in the pool
-                throw new RestClientException("Validation failed");
+                throw new WebClientResponseException("Validation failed", 400, "Bad Request", null, null, null);
             });
-        } catch (RestClientException e) {
-            // Catching the last RestClientException after n tries.
+        } catch (WebClientResponseException e) {
             log.error("All retries failed. No service available.");
-            return true; // Default value when all retries fail, e.g. if the service is offline
+            return false;
         }
     }
 
