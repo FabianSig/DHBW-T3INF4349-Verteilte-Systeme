@@ -1,5 +1,7 @@
 FROM nikomitk/python-transformers-toxic:cpu
 
+ENV HF_HUB_OFFLINE=1
+
 WORKDIR /app
 
 COPY requirements.txt .
