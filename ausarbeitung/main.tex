@@ -360,9 +360,15 @@ In diesem Kapitel wird die praktische Realisierung der zuvor beschriebenen Syste
 \subsection{Frontend}
 Für die Umsetzung des Frontends wurde Angular genutzt.
 \subsection{Chat-Server}
-Der Chat-Server wurde in Java 21 realisiert.
-\subsection{History-MS}
+Der Chat-Server wurde in Java unter Verwendung des Spring Boot Frameworks entwickelt. Im folgenden sollen die Hauptfunktionalitäten des Chat-Servers erläutert werden.\newline
 
+Eingehende Nachrichten von WebSocket-Clients werden vom Server empfangen und an den \texttt{ChatService} weitergeleitet. Dort erfolgt eine Validierung und Verarbeitung der Nachrichten, bevor sie an die entsprechenden Empfänger verteilt werden. Bei identifizierten unangemessenen Inhalten wird automatisch eine Systemnachricht generiert, und der betreffende Benutzer wird sanktioniert. Für die asynchrone Nachrichtenübermittlung kommt Apache Kafka zum Einsatz, um die Nachrichten zwischen den Backend Replika zu verteilen.\newline
+
+Validierte Nachrichten werden in einer Elasticsearch-Datenbank gespeichert, um einen dauerhaften Nachrichtenverlauf zu gewährleisten. Die Benutzerverwaltung erfolgt ebenfalls in dieser Datenbank, wobei Informationen wie Benutzerstrikes und Sperren automatisch aktualisiert werden.\newline
+
+Für die Validierung der Nachrichten nutzt der \texttt{LLMService} Verbindungen aus dem \texttt{LLMConnectionPool}. Der \texttt{LLMConnectionPool} verwaltet die verfügbaren API-Verbindungen mithilfe einer Round-Robin-Logik, unterstützt durch Redis als Zählmechanismus. Durch die Verwendung der \texttt{WebClient}-Klasse werden HTTP-Verbindungen effizient wiederverwendet, was die Leistung und Ressourcennutzung optimiert \cite{spring-webclient}. Sollte ein API-Aufruf fehlschlagen, wird die Anfrage durch das \texttt{RetryTemplate} automatisch wiederholt. Dies stellt sicher, dass bei einem Ausfall eines LLM-Containers die Anfrage an einen anderen Container weitergeleitet wird, wodurch die Ausfallsicherheit und Zuverlässigkeit des Systems erhöht wird.\newline
+\subsection{History-MS}
+Benutzer können über eine REST-API auf den Nachrichtenverlauf zugreifen und somit auch nach einer Unterbrechung nahtlos den vorherigen Chatverlauf einsehen.
 \subsection{LLM-Service}
 
 Der LLM-Service wurde in Python umgesetzt. Die Wahl fiel auf Python, da die Sprache eine breite Auswahl an Machine Learning Bibliotheken bietet. Für den LLM-Service wurde die \texttt{transformers} Bibliothek verwendet, da diese vortrainierte Modelle bereitstellt, die durch wenige Zeilen Code eingebunden werden können.
