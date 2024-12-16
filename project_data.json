@@ -1,0 +1,6 @@
+{
+  "thema": "Skalierbare Chatapplikation mit LLM-Moderation",
+  "kurs": "TINF22F",
+  "teilnehmer": "Nikolas Bodenmüller (2399231), Fabian Sigmund (7982497)",
+  "kurzbeschreibung": "Entwicklung einer skalierbaren Chatapplikation, die toxische Nachrichten erkennt, filtert und sanktioniert. User werden persistent in einer Datenbank gespeichert und können bei zu vielen toxischen Nachrichten gesperrt werden. Zur Klassifizierung von Nachrichten werden verschiedene LLM-Modelle verwendet."
+}
