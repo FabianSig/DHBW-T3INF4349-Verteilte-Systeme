@@ -243,7 +243,7 @@
 			
 			\Large von Nikolas Bodenmüller und Fabian Sigmund
 			
-			\large Matrikelnummer: \meineMatrikelNr  
+			\large Matrikelnummern: \meineMatrikelNr  
 			
 			\large Kurs: \meinKurs
 			
@@ -262,8 +262,7 @@
 \spacing{1}
 
 \fancypagestyle{plain}{
-	\fancyfoot[L]{\meinName\\
-		 \meinKurs}
+	\fancyfoot[L]{\meinName}
 	\fancyfoot[C]{Seite \thepage\ }% von \pageref{LastPage}}
 	\fancyfoot[R]{\abgabeDatum}
 }
@@ -271,8 +270,6 @@
 \pagestyle{plain}
 \fancyhead{}
 
-
-\fancyhead[C]{\nouppercase\leftmark}
 \fancyhead[R]{\includegraphics[scale=0.25]{dhbw}}
 
 \renewcommand{\footrulewidth}{0.4pt} %Linie für Fußzeile
@@ -308,7 +305,6 @@
 
 \newpage
 \pagenumbering{arabic}
-\chapter{Einleitung}
 
 \chapter{Architektur}
 \section{Allgemein}
@@ -376,7 +372,7 @@ In Abbildung \ref{fig:seq_msg} wird die Kommunikation zwischen den Komponenten d
 	\caption{Sequenzdiagramm für eine gesendete Nachricht}
 	\label{fig:seq_msg}
 \end{figure}
-
+\newpage
 \section{Funktionale und nicht-funktionale Anforderungen}
 
 \subsection{Funktionale Anforderungen}
