@@ -311,8 +311,11 @@
 \chapter{Einleitung}
 
 \chapter{Architektur}
-
 \section{Allgemein}
+\subsection{Aufbau}
+Die Architektur des Systems ist in fünf Komponenten aufgeteilt. Die erste Komponente ist ein Frontend, welches dem Nutzer als Schnittstelle dienen soll, um mit dem Chat interagieren zu können. Hier sollen gesendete und empfangene Nachrichten lokal gespeichert werden.  Dieses kommuniziert über das WebSocket-Protokoll mit einem Backend (Chat-Server), welches die Nachrichten persistiert. Da mehrere Instanzen dieser Backend-Applikation betrieben werden sollen, muss ein Austausch der eingehenden Nachrichten zwischen den Instanzen stattfinden. Die eingehenden Nachrichten werden außerdem in einer Datenbank persistiert. 
+Beim Verbindungsaufbau mit dem Frontend sollen alle Nachrichten, die seit der letzten lokal gespeicherten Nachricht eingegangen sind, abgerufen werden, so dass nicht jedes mal die Bandbreite für den gesamten Chatverlauf verbraucht werden muss. Hierfür gibt es einen Microservice (History-MS), welcher einen REST-Endpunkt bereitstellt, um den Verlauf ab einem bestimmten Zeitpunkt abzurufen.
+Wenn ein Nutzer eine Nachricht schickt, soll diese Automatisch von einem Machine-Learning-Modell überprüft werden, um herauszufinden, ob diese Nachricht einen anstößigen Text beinhaltet. Dafür stehen mehrere Instanzen eines Containers in einem Connectionpool bereit, die über eine REST Schnittstelle Nachrichten validieren sollen. Der Chat-Server sendet diese Nachrichten an eine der Instanzen. 
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[width=\linewidth]{architektur}
