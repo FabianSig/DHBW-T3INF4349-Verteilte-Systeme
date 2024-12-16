@@ -313,19 +313,71 @@
 \chapter{Architektur}
 \section{Allgemein}
 \subsection{Aufbau}
-Die Architektur des Systems ist in fünf Komponenten aufgeteilt. Die erste Komponente ist ein Frontend, welches dem Nutzer als Schnittstelle dienen soll, um mit dem Chat interagieren zu können. Hier sollen gesendete und empfangene Nachrichten lokal gespeichert werden.  Dieses kommuniziert über das WebSocket-Protokoll mit einem Backend (Chat-Server), welches die Nachrichten persistiert. Da mehrere Instanzen dieser Backend-Applikation betrieben werden sollen, muss ein Austausch der eingehenden Nachrichten zwischen den Instanzen stattfinden. Die eingehenden Nachrichten werden außerdem in einer Datenbank persistiert. 
-Beim Verbindungsaufbau mit dem Frontend sollen alle Nachrichten, die seit der letzten lokal gespeicherten Nachricht eingegangen sind, abgerufen werden, so dass nicht jedes mal die Bandbreite für den gesamten Chatverlauf verbraucht werden muss. Hierfür gibt es einen Microservice (History-MS), welcher einen REST-Endpunkt bereitstellt, um den Verlauf ab einem bestimmten Zeitpunkt abzurufen.
-Wenn ein Nutzer eine Nachricht schickt, soll diese Automatisch von einem Machine-Learning-Modell überprüft werden, um herauszufinden, ob diese Nachricht einen anstößigen Text beinhaltet. Dafür stehen mehrere Instanzen eines Containers in einem Connectionpool bereit, die über eine REST Schnittstelle Nachrichten validieren sollen. Der Chat-Server sendet diese Nachrichten an eine der Instanzen. 
+Für die Umsetzung des Systems wurde eine Microservice-Architektur gewählt. Die Nachrichten werden zwischen Frontend und Backend über das WebSocket-Protokoll ausgetauscht, wobei es einen Fallback auf HTTP gibt. Zwischen instanzen des Backends werden Nachrichten als Events ausgetauscht. Die Architektur wird in Abbildung \ref{fig:Architektur} dargestellt.
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[width=\linewidth]{architektur}
 	\caption{Architekturdiagramm der Chatapplikation}
 	\label{fig:Architektur}
 \end{figure}
+\subsection{Architekturelle Entscheidungen}
 
 \section{Systemkomponenten}
+\subsection{Welche Komponenten}
+Die Architektur des Systems ist in sechs Komponenten aufgeteilt. 
+\begin{enumerate}
+	\item \textbf{Frontend}: 
+	\begin{itemize}
+		\item Grafische Benutzeroberfläche
+		\item Speichert lokal den Chatverlauf
+		\item Mehrere Instanzen hinter einem Loadbalancer
+	\end{itemize}
+	\item \textbf{Chat-MS}
+	\begin{itemize}
+		\item Akzeptiert Nachrichten vom Frontend
+		\item Sendet eingehende Nachrichten an Frontend
+		\item Validiert Nachrichten über Moderations-MS
+		\item Mehrere Instanzen hinter einem Loadbalancer
+		\item Austausch über Events
+	\end{itemize}
+	\item \textbf{History-MS}
+	\begin{itemize}
+		\item Liefert Chatverlauf ab einem spezifizierten Zeitpunkt
+		\item Mehrere Instanzen hinter einem Loadbalancer
+	\end{itemize}
+	\item \textbf{Moderations-MS}
+	\begin{itemize}
+		\item Überprüft Nachrichten auf anstößigen Inhalt
+		\item Mehrere Instanzen in einem Connectionpool
+	\end{itemize}
+	\item \textbf{Datenbank}
+	\begin{itemize}
+		\item Speichert Nachrichten 
+		\item Speichert Nutzer
+		\item Eine Instanz
+	\end{itemize}
+	\item \textbf{Messaging-Broker}
+	\begin{itemize}
+		\item Austausch von Nachrichten zwischen Chat-MS instanzen
+	\end{itemize}
+\end{enumerate}
 
+\subsection{Kommunikation zwischen Komponenten}
+In Abbildung \ref{fig:seq_start} wird die Kommunikation zwischen den Komponenten dargestellt, wenn ein Nutzer die Verbindung zum Frontend aufbaut.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{sequence_start}
+	\caption{Sequenzdiagramm für eine gesendete Nachricht}
+	\label{fig:seq_start}
+\end{figure}
 
+In Abbildung \ref{fig:seq_msg} wird die Kommunikation zwischen den Komponenten dargestellt, wenn ein Nutzer im Frontend eine Nachricht absendet.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{sequence_msg}
+	\caption{Sequenzdiagramm für eine gesendete Nachricht}
+	\label{fig:seq_msg}
+\end{figure}
 
 \section{Funktionale und nicht-funktionale Anforderungen}
 
