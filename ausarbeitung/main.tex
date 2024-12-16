@@ -41,6 +41,7 @@
 
 \usepackage[utf8]{inputenc} % this is needed for umlauts
 \usepackage[ngerman]{babel} % this is needed for umlauts
+\usepackage[T1]{fontenc}    % this is needed for correct output of umlauts in pdf
 
 
 \usepackage{subcaption} % Für subfigures glaub
@@ -320,7 +321,9 @@ Für die Umsetzung des Systems wurde eine Microservice-Architektur gewählt. Die
 	\label{fig:Architektur}
 \end{figure}
 \subsection{Architekturelle Entscheidungen}
-
+Für die Kommunikation zwischen Front- und Backend wurde das WebSocket-Protokoll gewählt, da es bidirektionale Kommunikation ermöglicht, so dass das Frontend nicht regelmäßig HTTP-Requests an das Backend stellen muss. 
+Die Kommunikation zwischen Instanzen des Chat-MS soll durch Events erfolgen, da beispielsweise eine Message Queue nur begrenzt Nachrichten halten und die Nachrichten nicht von unbegrenzt vielen Consumern gelesen werden können.
+Für den Moderations-MS wurde ein Connection pool angelegt, da die Nachrichtenvalidierung teilweise sehr lang dauern kann, und so Verbindungen wiederverwendet werden können.
 \section{Systemkomponenten}
 \subsection{Welche Komponenten}
 Die Architektur des Systems ist in sechs Komponenten aufgeteilt. 
