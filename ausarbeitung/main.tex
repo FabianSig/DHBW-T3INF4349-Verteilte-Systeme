@@ -357,8 +357,6 @@ In diesem Kapitel wird die praktische Realisierung der zuvor beschriebenen Syste
 
 \section{Implementierung}
 
-\subsection{Frontend}
-Für die Umsetzung des Frontends wurde Angular genutzt.
 \subsection{Chat-Server}
 Der Chat-Server wurde in Java unter Verwendung des Spring Boot Frameworks entwickelt. Im folgenden sollen die Hauptfunktionalitäten des Chat-Servers erläutert werden.\newline
 
@@ -367,8 +365,7 @@ Eingehende Nachrichten von WebSocket-Clients werden vom Server empfangen und an 
 Validierte Nachrichten werden in einer Elasticsearch-Datenbank gespeichert, um einen dauerhaften Nachrichtenverlauf zu gewährleisten. Die Benutzerverwaltung erfolgt ebenfalls in dieser Datenbank, wobei Informationen wie Benutzerstrikes und Sperren automatisch aktualisiert werden.\newline
 
 Für die Validierung der Nachrichten nutzt der \texttt{LLMService} Verbindungen aus dem \texttt{LLMConnectionPool}. Der \texttt{LLMConnectionPool} verwaltet die verfügbaren API-Verbindungen mithilfe einer Round-Robin-Logik, unterstützt durch Redis als Zählmechanismus. Durch die Verwendung der \texttt{WebClient}-Klasse werden HTTP-Verbindungen effizient wiederverwendet, was die Leistung und Ressourcennutzung optimiert \cite{spring-webclient}. Sollte ein API-Aufruf fehlschlagen, wird die Anfrage durch das \texttt{RetryTemplate} automatisch wiederholt. Dies stellt sicher, dass bei einem Ausfall eines LLM-Containers die Anfrage an einen anderen Container weitergeleitet wird, wodurch die Ausfallsicherheit und Zuverlässigkeit des Systems erhöht wird.\newline
-\subsection{History-MS}
-Benutzer können über eine REST-API auf den Nachrichtenverlauf zugreifen und somit auch nach einer Unterbrechung nahtlos den vorherigen Chatverlauf einsehen.
+
 \subsection{LLM-Service}
 
 Der LLM-Service wurde in Python umgesetzt. Die Wahl fiel auf Python, da die Sprache eine breite Auswahl an Machine Learning Bibliotheken bietet. Für den LLM-Service wurde die \texttt{transformers} Bibliothek verwendet, da diese vortrainierte Modelle bereitstellt, die durch wenige Zeilen Code eingebunden werden können.
@@ -376,7 +373,7 @@ Der LLM-Service wurde in Python umgesetzt. Die Wahl fiel auf Python, da die Spra
 Insgesamt wurden zwei Modelle für die Lösung genutzt:
 
 \begin{center}
-\texttt{ml6team/distilbert-base-german-cased-toxic-comments} (Deutsches Modell) \texttt{unitary/multilingual-toxic-xlm-roberta} (Multilinguales Modell)
+	\texttt{ml6team/distilbert-base-german-cased-toxic-comments} (Deutsches Modell) \texttt{unitary/multilingual-toxic-xlm-roberta} (Multilinguales Modell)
 \end{center}
 
 Das deutsche Modell basiert auf dem \texttt{distilbert/distilbert-base-german-cased} und wurde speziell auf toxische Kommentare trainiert. Unsere Wahl wurde durch ein Konferenzpaper inspiriert, das dieses Modell zur Analyse von Verschwörungstheorien in Telegram-Gruppen erfolgreich einsetzte \cite{weigand-etal-2022-conspiracy}. Ergänzend hierzu wurde ein mehrsprachiges Modell eingesetzt, um toxische Inhalte in verschiedenen Sprachen zuverlässig zu klassifizieren. Die Entscheidung fiel auf das \texttt{unitary}-Modell, das auf \texttt{XLM-RoBERTa} basiert und durch einen hohen F1-Score überzeugt, was Fehlklassifikationen deutscher Nachrichten als toxisch minimiert \cite{model-comparison}.\newline
@@ -388,12 +385,21 @@ Ein ähnlicher Multi-Model-Ansatz wurde von Tran und Kruschwitz (2021) im Rahmen
 Die folgende Code-Implementierung zeigt die Auswahllogik für das beste Klassifikationsergebnis: Wenn das mehrsprachige Modell einen Konfidenzwert über 0,9 erreicht, wird dessen Ergebnis priorisiert. Andernfalls wird das Ergebnis des deutschen Modells verwendet. Dies reduziert die Wahrscheinlichkeit, dass deutsche Nachrichten fälschlicherweise als toxisch eingestuft werden.
 \begin{figure}[h]
 	\centering
-\begin{lstlisting}
-	best_result = multilingual_result if multilingual_result[0]['score'] > 0.9 else german_result
-\end{lstlisting}
-\caption{Python-Code zur Auswahl des besten Klassifikationsergebnisses.}
-\label{fig:best_result_selection}
+	\begin{lstlisting}
+		best_result = multilingual_result if multilingual_result[0]['score'] > 0.9 else german_result
+	\end{lstlisting}
+	\caption{Python-Code zur Auswahl des besten Klassifikationsergebnisses.}
+	\label{fig:best_result_selection}
 \end{figure}
+
+\subsection{History-MS}
+Der History Microservice (History-MS) ermöglicht es Benutzern, über eine REST-API auf den Nachrichtenverlauf zuzugreifen und somit auch nach einer Unterbrechung nahtlos den vorherigen Chatverlauf einzusehen. Dabei werden die Nachrichten in einer Elasticsearch-Datenbank gespeichert, die eine effiziente Speicherung und Abfrage der Daten ermöglicht. Die REST-API stellt einen Endpunkt bereit, über die Benutzer den Nachrichtenverlauf abrufen können, indem sie einen bestimmten Zeitstempel angeben, ab dem die Nachrichten angezeigt werden sollen.
+
+
+\subsection{Frontend}
+Für die Umsetzung des Frontends wurde Angular genutzt.
+
+
 
 \section{Mögliche Alternativen}
 
