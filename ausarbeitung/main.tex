@@ -405,44 +405,60 @@ In Abbildung \ref{fig:seq_msg} wird die Kommunikation zwischen den Komponenten d
 
 \chapter{Umsetzung}
 
-In diesem Kapitel wird die praktische Realisierung der zuvor beschriebenen Systemarchitektur vorgestellt. Dabei wird zunächst die konkrete Implementierung der einzelnen Komponenten erläutert und auf die wichtigsten technischen Entscheidungen eingegangen. Anschließend werden mögliche Alternativen zur aktuellen Umsetzung diskutiert, um weitere Lösungsansätze aufzuzeigen und das Projekt kritisch zu reflektieren.
+In diesem Kapitel wird die praktische Realisierung der zuvor beschriebenen Systemarchitektur vorgestellt. Dabei wird zunächst die konkrete Implementierung der einzelnen Komponenten erläutert und auf die wichtigsten technischen Entscheidungen eingegangen. Anschließend werden mögliche Alternativen und Schwierigkeiten bei der Umsetzung zur aktuellen Umsetzung diskutiert, um weitere Lösungsansätze aufzuzeigen und das Projekt kritisch zu reflektieren.
 
 \section{Implementierung}
 
-\subsection{Frontend}
-Für die Umsetzung des Frontends wurde Angular genutzt.
 \subsection{Chat-Server}
-Der Chat-Server  wurde in Java 21 realisiert.
-\subsection{History-MS}
+Der Chat-Server wurde in Java unter Verwendung des Spring Boot Frameworks entwickelt. Im folgenden sollen die Hauptfunktionalitäten des Chat-Servers erläutert werden.\newline
+
+Eingehende Nachrichten von WebSocket-Clients werden vom Server empfangen und an den \texttt{ChatService} weitergeleitet. Dort erfolgt eine Validierung und Verarbeitung der Nachrichten, bevor sie an die entsprechenden Empfänger verteilt werden. Bei identifizierten unangemessenen Inhalten wird automatisch eine Systemnachricht generiert, und der betreffende Benutzer wird sanktioniert. Für die asynchrone Nachrichtenübermittlung kommt Apache Kafka zum Einsatz, um die Nachrichten zwischen den Backend Replika zu verteilen.\newline
+
+Validierte Nachrichten werden in einer Elasticsearch-Datenbank gespeichert, um einen dauerhaften Nachrichtenverlauf zu gewährleisten. Die Benutzerverwaltung erfolgt ebenfalls in dieser Datenbank, wobei Informationen wie Benutzerstrikes und Sperren automatisch aktualisiert werden.\newline
+
+Für die Validierung der Nachrichten nutzt der \texttt{LLMService} Verbindungen aus dem \texttt{LLMConnectionPool}. Der \texttt{LLMConnectionPool} verwaltet die verfügbaren API-Verbindungen mithilfe einer Round-Robin-Logik, unterstützt durch Redis als Zählmechanismus. Durch die Verwendung der \texttt{WebClient}-Klasse werden HTTP-Verbindungen effizient wiederverwendet, was die Leistung und Ressourcennutzung optimiert \cite{spring-webclient}. Sollte ein API-Aufruf fehlschlagen, wird die Anfrage durch das \texttt{RetryTemplate} automatisch wiederholt. Dies stellt sicher, dass bei einem Ausfall eines LLM-Containers die Anfrage an einen anderen Container weitergeleitet wird, wodurch die Ausfallsicherheit und Zuverlässigkeit des Systems erhöht wird.\newline
 
 \subsection{LLM-Service}
 
-Der LLM-Service wurde in Python umgesetzt. Die Wahl fiel auf Python, da die Sprache eine breite Auswahl an Machine Learning Bibliotheken bietet. Für den LLM-Service wurde die \texttt{huggingface\_hub} Bibliothek verwendet, da diese vortrainierte Modelle bereitstellt, die durch wenige Zeilen Code eingebunden werden können.
+Der LLM-Service wurde in Python umgesetzt. Die Wahl fiel auf Python, da die Sprache eine breite Auswahl an Machine Learning Bibliotheken bietet. Für den LLM-Service wurde die \texttt{transformers} Bibliothek verwendet, da diese vortrainierte Modelle bereitstellt, die durch wenige Zeilen Code eingebunden werden können. Jedoch konnten wir kein Modell finden, das sowohl Deutsche Texte als auch Englische Texte klassifizieren kann.
 \newline\newline
-Insgesamt wurden zwei Modelle für die Lösung genutzt:
+Insgesamt wurden deshalb zwei Modelle für die Lösung genutzt:
 
 \begin{center}
-\texttt{ml6team/distilbert-base-german-cased-toxic-comments} (Deutsches Modell) \texttt{unitary/multilingual-toxic-xlm-roberta} (Multilinguales Modell)
+	\texttt{ml6team/distilbert-base-german-cased-toxic-comments} (Deutsches Modell) \texttt{unitary/multilingual-toxic-xlm-roberta} (Multilinguales Modell)
 \end{center}
 
 Das deutsche Modell basiert auf dem \texttt{distilbert/distilbert-base-german-cased} und wurde speziell auf toxische Kommentare trainiert. Unsere Wahl wurde durch ein Konferenzpaper inspiriert, das dieses Modell zur Analyse von Verschwörungstheorien in Telegram-Gruppen erfolgreich einsetzte \cite{weigand-etal-2022-conspiracy}. Ergänzend hierzu wurde ein mehrsprachiges Modell eingesetzt, um toxische Inhalte in verschiedenen Sprachen zuverlässig zu klassifizieren. Die Entscheidung fiel auf das \texttt{unitary}-Modell, das auf \texttt{XLM-RoBERTa} basiert und durch einen hohen F1-Score überzeugt, was Fehlklassifikationen deutscher Nachrichten als toxisch minimiert \cite{model-comparison}.\newline
 
-Das \texttt{unitary}-Modell kann unter anderem Englisch, Italienisch und Russisch klassifizieren, jedoch nicht Deutsch. Um diese Einschränkung auszugleichen und Fehlklassifikationen zu vermeiden, setzen wir gezielt auf zwei spezialisierte Modelle – ein Verfahren, das in der Literatur als Multi-Model-Ansatz (\textit{Multi-Model Approach}) bekannt ist. Dieses Vorgehen kombiniert die Stärken beider Modelle und sorgt für eine präzisere Erkennung toxischer Inhalte.\newline
+Das \texttt{unitary}-Modell kann unter anderem Englisch, Italienisch und Russisch klassifizieren, jedoch nicht Deutsch. Um diese Einschränkung auszugleichen und Fehlklassifikationen zu vermeiden, setzen wir gezielt auf zwei spezialisierte Modelle - ein Ansatz, der in der Literatur als Multi-Model-Ansatz (\textit{Multi-Model Approach}) bekannt ist. Dieses Vorgehen kombiniert die Stärken beider Modelle und sorgt für eine präzisere Erkennung toxischer Inhalte.\newline
 
 Ein ähnlicher Multi-Model-Ansatz wurde von Tran und Kruschwitz (2021) im Rahmen des GermEval 2021 Shared Tasks verfolgt. Sie kombinierten mehrere BERT-Modelle mittels Hard Voting, um die Klassifikation toxischer Kommentare zu optimieren \cite{tran2021ensemble}. Im Gegensatz dazu verwenden wir aus Effizienz- und Performancegründen bewusst nur zwei Modelle. Da Hard Voting bei dieser geringen Modellanzahl nicht möglich ist, priorisieren wir das multilinguale Modell, sofern dessen Konfidenzwert besonders hoch ist, um eine präzise Klassifikation sicherzustellen.\newline
 
 Die folgende Code-Implementierung zeigt die Auswahllogik für das beste Klassifikationsergebnis: Wenn das mehrsprachige Modell einen Konfidenzwert über 0,9 erreicht, wird dessen Ergebnis priorisiert. Andernfalls wird das Ergebnis des deutschen Modells verwendet. Dies reduziert die Wahrscheinlichkeit, dass deutsche Nachrichten fälschlicherweise als toxisch eingestuft werden.
 \begin{figure}[h]
 	\centering
-\begin{lstlisting}
-	best_result = multilingual_result if multilingual_result[0]['score'] > 0.9 else german_result
-\end{lstlisting}
-\caption{Python-Code zur Auswahl des besten Klassifikationsergebnisses.}
-\label{fig:best_result_selection}
+	\begin{lstlisting}
+		best_result = multilingual_result if multilingual_result[0]['score'] > 0.9 else german_result
+	\end{lstlisting}
+	\caption{Python-Code zur Auswahl des besten Klassifikationsergebnisses.}
+	\label{fig:best_result_selection}
 \end{figure}
 
-\section{Mögliche Alternativen}
+\subsection{History-MS}
+Der History Microservice (History-MS) ist ebenfalls im Spring Boot umgesetzt. Er ermöglicht es Benutzern, über eine REST-API auf den Nachrichtenverlauf zuzugreifen und somit auch nach einer Unterbrechung nahtlos den vorherigen Chatverlauf einzusehen. Dabei werden die Nachrichten in einer Elasticsearch-Datenbank gespeichert, die eine effiziente Speicherung und Abfrage der Daten ermöglicht. Die REST-API stellt einen Endpunkt bereit, über die Benutzer den Nachrichtenverlauf abrufen können, indem sie einen bestimmten Zeitstempel angeben, ab dem die Nachrichten angezeigt werden sollen.
 
+
+\subsection{Frontend}
+Das Frontend der Chat-Anwendung wurde mit Angular entwickelt und bietet den Benutzern eine einfache Oberfläche zum Senden und Empfangen von Nachrichten. Es stellt Anfragen an den zuvor genannten Chat-Server und den History-MS. Falls der aktuell verbundene Chat-Server abstürzt, verbindet sich das Frontend automatisch mit einem andern verfügbaren Replika, um die Kommunikation aufrechtzuerhalten.
+\section{Mögliche Alternativen und zusätzliche Schwierigkeiten}
+
+Während der Entwicklungsphase wurden verschiedene Alternativen in Betracht gezogen. Für den Chat-Server hätten andere Programmiersprachen verwendet werden können, jedoch entschieden wir uns für uns bereits bekannte Technologien, um die Entwicklung effizienter zu gestalten. Für den LLM-Service wurde auch die Möglichkeit in Erwägung gezogen, ein eigenes Modell zu trainieren, um maximale Kontrolle über die Textmoderation zu erhalten. Allerdings hätte das eigene Training erheblichen Zeitaufwand erfordert, weshalb wir uns für bestehende vortrainierte Modelle entschieden.\newline
+
+Bei der Wahl der Datenbank nutzten wir zunächst MongoDB, entschieden uns jedoch später dafür, Elasticsearch auszuprobieren, um dessen spezialisierte Such- und Analysefunktionen besser zu verstehen. Im Frontend-Bereich wären ebenfalls alternative Frameworks denkbar gewesen, jedoch entschieden wir uns für eine vertraute Lösung, um die Entwicklungszeit zu minimieren.\newline
+
+Eine wesentliche technische Herausforderung war die hohe Rechenintensität der Container für den LLM-Service. Um die Belastung zu reduzieren und die Präsentation reibungslos durchzuführen, wurde der LLM-Service auf einem separaten Laptop gehostet, während die restliche Anwendung auf einem anderen Laptop lief. Die Kommunikation zwischen den Laptops erfolgte über ein Netzwerk, was eine bessere Lastverteilung und stabile Demonstrationsbedingungen sicherstellte.\newline
+
+\chapter{Reflexion}
 
 
 %********************************
