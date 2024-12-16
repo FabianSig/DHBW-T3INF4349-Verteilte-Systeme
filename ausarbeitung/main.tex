@@ -326,7 +326,7 @@ Die Kommunikation zwischen Instanzen des Chat-MS soll durch Events erfolgen, da 
 Für den Moderations-MS wurde ein Connection pool angelegt, da die Nachrichtenvalidierung teilweise sehr lang dauern kann, und so Verbindungen wiederverwendet werden können.
 \section{Systemkomponenten}
 \subsection{Welche Komponenten}
-Die Architektur des Systems ist in sechs Komponenten aufgeteilt. 
+Die Architektur des Systems ist in fünf Komponenten aufgeteilt. 
 \begin{enumerate}
 	\item \textbf{Frontend}: 
 	\begin{itemize}
@@ -357,10 +357,6 @@ Die Architektur des Systems ist in sechs Komponenten aufgeteilt.
 		\item Speichert Nachrichten 
 		\item Speichert Nutzer
 		\item Eine Instanz
-	\end{itemize}
-	\item \textbf{Messaging-Broker}
-	\begin{itemize}
-		\item Austausch von Nachrichten zwischen Chat-MS instanzen
 	\end{itemize}
 \end{enumerate}
 
