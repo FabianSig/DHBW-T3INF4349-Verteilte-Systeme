@@ -95,4 +95,4 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     deploy:
-      replicas: 1
+      replicas: 3
