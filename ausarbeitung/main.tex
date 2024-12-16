@@ -350,6 +350,19 @@ Der Chat-Server  wurde in Java 21 realisiert.
 \subsection{LLM-Service}
 
 Der LLM-Service wurde in Python umgesetzt. Die Wahl fiel auf Python, da die Sprache eine breite Auswahl an Machine Learning Bibliotheken bietet. Für den LLM-Service wurde die \texttt{huggingface\_hub} Bibliothek verwendet, da diese vortrainierte Modelle bereitstellt, die durch wenige Zeilen Code eingebunden werden können.
+\newline\newline
+Insgesamt wurden zwei Modelle für die Lösung genutzt:
+
+\begin{center}
+\texttt{ml6team/distilbert-base-german-cased-toxic-comments} (Deutsches Modell) \texttt{unitary/multilingual-toxic-xlm-roberta} (Multilinguales Modell)
+\end{center}
+
+Das Deutsche Modell ist ein fine-tuned Modell des \texttt{distilbert/distilbert-base-german-cased} Modells. Wir haben uns dabei von einem Konferenzpaper inspirieren lassen, das ebenfalls dieses Modell verwendet und sich mit der Analyse von Verschwörungstheorien in Telegram-Gruppen beschäftigt \cite{weigand-etal-2022-conspiracy}.
+\newline\newline
+Ergänzend zu dem deutschen Modell wurde ein Multilinguales eingesetzt. Wichtig war es hierbei zu beachten, dass das Multilinguale Modell einen hohen F1-Score hat, um keine falschen Ergebnisse zu erhalten bei denen Deutsche Nachrichten als toxisch klassifiziert werden. Die Wahl fiel deshalb auf das \texttt{unitary} Modell, das auf \texttt{XLM-RoBERTa} basiert und eine hohe Leistungsfähigkeit in der mehrsprachigen bietKlassifikation bietet \cite{model-comparison}.
+
+
+
 \section{Mögliche Alternativen}
 
 
@@ -366,7 +379,7 @@ Der LLM-Service wurde in Python umgesetzt. Die Wahl fiel auf Python, da die Spra
 %Quellenverzeichnis
 \renewcommand{\refname}{Literaturverzeichnis}
 \bibliographystyle{IEEEtran}
-\bibliography{./sources}
+\bibliography{./sources/bibliography}
 
 
 \end{document}
