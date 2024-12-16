@@ -83,6 +83,19 @@
 	breakatwhitespace=true,
 	tabsize=3
 }
+
+\lstset{
+	language=Python,
+	basicstyle=\ttfamily\small,
+	keywordstyle=\color{blue},
+	stringstyle=\color{red},
+	commentstyle=\color{gray},
+	backgroundcolor=\color{gray!10},
+	showstringspaces=false,
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	numbersep=5pt
+}
 %-------------------------------------------------
 
 \usepackage{graphicx} %Package für Bilder
@@ -357,11 +370,21 @@ Insgesamt wurden zwei Modelle für die Lösung genutzt:
 \texttt{ml6team/distilbert-base-german-cased-toxic-comments} (Deutsches Modell) \texttt{unitary/multilingual-toxic-xlm-roberta} (Multilinguales Modell)
 \end{center}
 
-Das Deutsche Modell ist ein fine-tuned Modell des \texttt{distilbert/distilbert-base-german-cased} Modells. Wir haben uns dabei von einem Konferenzpaper inspirieren lassen, das ebenfalls dieses Modell verwendet und sich mit der Analyse von Verschwörungstheorien in Telegram-Gruppen beschäftigt \cite{weigand-etal-2022-conspiracy}.
-\newline\newline
-Ergänzend zu dem deutschen Modell wurde ein Multilinguales eingesetzt. Wichtig war es hierbei zu beachten, dass das Multilinguale Modell einen hohen F1-Score hat, um keine falschen Ergebnisse zu erhalten bei denen Deutsche Nachrichten als toxisch klassifiziert werden. Die Wahl fiel deshalb auf das \texttt{unitary} Modell, das auf \texttt{XLM-RoBERTa} basiert und eine hohe Leistungsfähigkeit in der mehrsprachigen bietKlassifikation bietet \cite{model-comparison}.
+Das deutsche Modell basiert auf dem \texttt{distilbert/distilbert-base-german-cased} und wurde speziell auf toxische Kommentare trainiert. Unsere Wahl wurde durch ein Konferenzpaper inspiriert, das dieses Modell zur Analyse von Verschwörungstheorien in Telegram-Gruppen erfolgreich einsetzte \cite{weigand-etal-2022-conspiracy}. Ergänzend hierzu wurde ein mehrsprachiges Modell eingesetzt, um toxische Inhalte in verschiedenen Sprachen zuverlässig zu klassifizieren. Die Entscheidung fiel auf das \texttt{unitary}-Modell, das auf \texttt{XLM-RoBERTa} basiert und durch einen hohen F1-Score überzeugt, was Fehlklassifikationen deutscher Nachrichten als toxisch minimiert \cite{model-comparison}.\newline
 
+Das \texttt{unitary}-Modell kann unter anderem Englisch, Italienisch und Russisch klassifizieren, jedoch nicht Deutsch. Um diese Einschränkung auszugleichen und Fehlklassifikationen zu vermeiden, setzen wir gezielt auf zwei spezialisierte Modelle – ein Verfahren, das in der Literatur als Multi-Model-Ansatz (\textit{Multi-Model Approach}) bekannt ist. Dieses Vorgehen kombiniert die Stärken beider Modelle und sorgt für eine präzisere Erkennung toxischer Inhalte.\newline
 
+Ein ähnlicher Multi-Model-Ansatz wurde von Tran und Kruschwitz (2021) im Rahmen des GermEval 2021 Shared Tasks verfolgt. Sie kombinierten mehrere BERT-Modelle mittels Hard Voting, um die Klassifikation toxischer Kommentare zu optimieren \cite{tran2021ensemble}. Im Gegensatz dazu verwenden wir aus Effizienz- und Performancegründen bewusst nur zwei Modelle. Da Hard Voting bei dieser geringen Modellanzahl nicht möglich ist, priorisieren wir das multilinguale Modell, sofern dessen Konfidenzwert besonders hoch ist, um eine präzise Klassifikation sicherzustellen.\newline
+
+Die folgende Code-Implementierung zeigt die Auswahllogik für das beste Klassifikationsergebnis: Wenn das mehrsprachige Modell einen Konfidenzwert über 0,9 erreicht, wird dessen Ergebnis priorisiert. Andernfalls wird das Ergebnis des deutschen Modells verwendet. Dies reduziert die Wahrscheinlichkeit, dass deutsche Nachrichten fälschlicherweise als toxisch eingestuft werden.
+\begin{figure}[h]
+	\centering
+\begin{lstlisting}
+	best_result = multilingual_result if multilingual_result[0]['score'] > 0.9 else german_result
+\end{lstlisting}
+\caption{Python-Code zur Auswahl des besten Klassifikationsergebnisses.}
+\label{fig:best_result_selection}
+\end{figure}
 
 \section{Mögliche Alternativen}
 
