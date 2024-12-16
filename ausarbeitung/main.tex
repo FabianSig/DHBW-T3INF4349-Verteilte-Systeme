@@ -41,7 +41,6 @@
 
 \usepackage[utf8]{inputenc} % this is needed for umlauts
 \usepackage[ngerman]{babel} % this is needed for umlauts
-\usepackage[T1]{fontenc}    % this is needed for correct output of umlauts in pdf
 
 
 \usepackage{subcaption} % Für subfigures glaub
@@ -387,9 +386,9 @@ In Abbildung \ref{fig:seq_msg} wird die Kommunikation zwischen den Komponenten d
 	\item Die Loadbalancer sorgen für eine gleichmäßige Verteilung der Anfragen an die verfügbaren Backend-Instanzen.
 	\item Eingehende Nachrichten werden vom Moderations-LLM überprüft, um unzulässige Inhalte zu filtern.
 	\item Der History-MS speichert Nachrichten und Chat-Historien und stellt sie bei Bedarf zur Verfügung.
-	\item Neue Instanzen von Chat-Server oder History-MS können hinzugefügt oder entfernt werden, um Lastspitzen zu bewältigen.
+	\item Neue Instanzen von Chat-MS oder History-MS können hinzugefügt oder entfernt werden, um Lastspitzen zu bewältigen.
 	\item Chat-Daten werden dauerhaft in der Datenbank gespeichert, um den Zugriff auf frühere Nachrichten sicherzustellen.
-	\item Die Kommunikation zwischen Chat-Server und History-MS erfolgt asynchron über einen Nachrichten-Broker wie Kafka.
+	\item Die Kommunikation zwischen Chat-MS und History-MS erfolgt asynchron über einen Nachrichten-Broker wie Kafka.
 	\item Bei Ausfällen einzelner Server werden Anfragen automatisch auf andere Instanzen umgeleitet.
 \end{itemize}
 
@@ -409,8 +408,8 @@ In diesem Kapitel wird die praktische Realisierung der zuvor beschriebenen Syste
 
 \section{Implementierung}
 
-\subsection{Chat-Server}
-Der Chat-Server wurde in Java unter Verwendung des Spring Boot Frameworks entwickelt. Im folgenden sollen die Hauptfunktionalitäten des Chat-Servers erläutert werden.\newline
+\subsection{Chat-MS}
+Der Chat-MS wurde in Java unter Verwendung des Spring Boot Frameworks entwickelt. Im folgenden sollen die Hauptfunktionalitäten des Chat-MSs erläutert werden.\newline
 
 Eingehende Nachrichten von WebSocket-Clients werden vom Server empfangen und an den \texttt{ChatService} weitergeleitet. Dort erfolgt eine Validierung und Verarbeitung der Nachrichten, bevor sie an die entsprechenden Empfänger verteilt werden. Bei identifizierten unangemessenen Inhalten wird automatisch eine Systemnachricht generiert, und der betreffende Benutzer wird sanktioniert. Für die asynchrone Nachrichtenübermittlung kommt Apache Kafka zum Einsatz, um die Nachrichten zwischen den Backend Replika zu verteilen.\newline
 
@@ -418,9 +417,9 @@ Validierte Nachrichten werden in einer Elasticsearch-Datenbank gespeichert, um e
 
 Für die Validierung der Nachrichten nutzt der \texttt{LLMService} Verbindungen aus dem \texttt{LLMConnectionPool}. Der \texttt{LLMConnectionPool} verwaltet die verfügbaren API-Verbindungen mithilfe einer Round-Robin-Logik, unterstützt durch Redis als Zählmechanismus. Durch die Verwendung der \texttt{WebClient}-Klasse werden HTTP-Verbindungen effizient wiederverwendet, was die Leistung und Ressourcennutzung optimiert \cite{spring-webclient}. Sollte ein API-Aufruf fehlschlagen, wird die Anfrage durch das \texttt{RetryTemplate} automatisch wiederholt. Dies stellt sicher, dass bei einem Ausfall eines LLM-Containers die Anfrage an einen anderen Container weitergeleitet wird, wodurch die Ausfallsicherheit und Zuverlässigkeit des Systems erhöht wird.\newline
 
-\subsection{LLM-Service}
+\subsection{Moderations-Service}
 
-Der LLM-Service wurde in Python umgesetzt. Die Wahl fiel auf Python, da die Sprache eine breite Auswahl an Machine Learning Bibliotheken bietet. Für den LLM-Service wurde die \texttt{transformers} Bibliothek verwendet, da diese vortrainierte Modelle bereitstellt, die durch wenige Zeilen Code eingebunden werden können. Jedoch konnten wir kein Modell finden, das sowohl Deutsche Texte als auch Englische Texte klassifizieren kann.
+Der Moderations-Service wurde in Python umgesetzt. Die Wahl fiel auf Python, da die Sprache eine breite Auswahl an Machine Learning Bibliotheken bietet. Für den Moderations-Service wurde die \texttt{transformers} Bibliothek verwendet, da diese vortrainierte Modelle bereitstellt, die durch wenige Zeilen Code eingebunden werden können. Jedoch konnten wir kein Modell finden, das sowohl Deutsche Texte als auch Englische Texte klassifizieren kann.
 \newline\newline
 Insgesamt wurden deshalb zwei Modelle für die Lösung genutzt:
 
@@ -445,21 +444,30 @@ Die folgende Code-Implementierung zeigt die Auswahllogik für das beste Klassifi
 \end{figure}
 
 \subsection{History-MS}
-Der History Microservice (History-MS) ist ebenfalls im Spring Boot umgesetzt. Er ermöglicht es Benutzern, über eine REST-API auf den Nachrichtenverlauf zuzugreifen und somit auch nach einer Unterbrechung nahtlos den vorherigen Chatverlauf einzusehen. Dabei werden die Nachrichten in einer Elasticsearch-Datenbank gespeichert, die eine effiziente Speicherung und Abfrage der Daten ermöglicht. Die REST-API stellt einen Endpunkt bereit, über die Benutzer den Nachrichtenverlauf abrufen können, indem sie einen bestimmten Zeitstempel angeben, ab dem die Nachrichten angezeigt werden sollen.
+Der History Microservice (History-MS) ist ebenfalls im Spring Boot umgesetzt. Er ermöglicht es Benutzern, über eine REST-API auf den Nachrichtenverlauf zuzugreifen und somit auch nach einer Unterbrechung nahtlos den vorherigen Chatverlauf einzusehen. Die REST-API stellt einen Endpunkt bereit, über die Benutzer den Nachrichtenverlauf aus der Elasticsearch-Datenbank abrufen können, indem sie einen bestimmten Zeitstempel angeben, ab dem die Nachrichten angezeigt werden sollen.
 
 
 \subsection{Frontend}
-Das Frontend der Chat-Anwendung wurde mit Angular entwickelt und bietet den Benutzern eine einfache Oberfläche zum Senden und Empfangen von Nachrichten. Es stellt Anfragen an den zuvor genannten Chat-Server und den History-MS. Falls der aktuell verbundene Chat-Server abstürzt, verbindet sich das Frontend automatisch mit einem andern verfügbaren Replika, um die Kommunikation aufrechtzuerhalten.
+Das Frontend der Chat-Anwendung wurde mit Angular entwickelt und bietet den Benutzern eine einfache Oberfläche zum Senden und Empfangen von Nachrichten. Es stellt Anfragen an den zuvor genannten Chat-MS und den History-MS. Falls der aktuell verbundene Chat-MS abstürzt, verbindet sich das Frontend automatisch mit einem andern verfügbaren Replika, um die Kommunikation aufrechtzuerhalten.
 \section{Mögliche Alternativen und zusätzliche Schwierigkeiten}
 
-Während der Entwicklungsphase wurden verschiedene Alternativen in Betracht gezogen. Für den Chat-Server hätten andere Programmiersprachen verwendet werden können, jedoch entschieden wir uns für uns bereits bekannte Technologien, um die Entwicklung effizienter zu gestalten. Für den LLM-Service wurde auch die Möglichkeit in Erwägung gezogen, ein eigenes Modell zu trainieren, um maximale Kontrolle über die Textmoderation zu erhalten. Allerdings hätte das eigene Training erheblichen Zeitaufwand erfordert, weshalb wir uns für bestehende vortrainierte Modelle entschieden.\newline
+Während der Entwicklungsphase wurden verschiedene Alternativen in Betracht gezogen. Für den Chat-MS, History-MS und das Frontend hätten andere Programmiersprachen als Java bzw. Angular verwendet werden können, jedoch entschieden wir uns für uns bereits bekannte Technologien, um die Entwicklung effizienter zu gestalten. Für den Moderations-Service wurde auch die Möglichkeit in Erwägung gezogen, ein eigenes Modell zu trainieren, um maximale Kontrolle über die Textmoderation zu erhalten. Allerdings hätte das eigene Training erheblichen Zeitaufwand erfordert, weshalb wir uns für bestehende vortrainierte Modelle entschieden.\newline
 
-Bei der Wahl der Datenbank nutzten wir zunächst MongoDB, entschieden uns jedoch später dafür, Elasticsearch auszuprobieren, um dessen spezialisierte Such- und Analysefunktionen besser zu verstehen. Im Frontend-Bereich wären ebenfalls alternative Frameworks denkbar gewesen, jedoch entschieden wir uns für eine vertraute Lösung, um die Entwicklungszeit zu minimieren.\newline
+Bei der Verteilung der Nachrichten zwischen den Backend-Replika war MQTT als Messaging-Broker keine sinnvolle Wahl, da es für IoT-Anwendungen entwickelt wurde und wichtige Funktionen wie Datenreplikation und Skalierbarkeit fehlen. Stattdessen entschieden wir uns für Apache Kafka, das speziell für die Verarbeitung großer Datenmengen konzipiert ist.\newline
 
-Eine wesentliche technische Herausforderung war die hohe Rechenintensität der Container für den LLM-Service. Um die Belastung zu reduzieren und die Präsentation reibungslos durchzuführen, wurde der LLM-Service auf einem separaten Laptop gehostet, während die restliche Anwendung auf einem anderen Laptop lief. Die Kommunikation zwischen den Laptops erfolgte über ein Netzwerk, was eine bessere Lastverteilung und stabile Demonstrationsbedingungen sicherstellte.\newline
+Bei der Wahl der Datenbank nutzten wir zunächst MongoDB, entschieden uns jedoch später dafür, Elasticsearch auszuprobieren, um dessen spezialisierte Such- und Analysefunktionen besser zu verstehen.\newline
+
+Eine wesentliche technische Herausforderung war die hohe Rechenintensität der Container für den Moderations-Service. Um die Belastung zu reduzieren und die Präsentation reibungslos durchzuführen, wurde der Moderations-Service auf einem separaten Laptop gehostet. Die Kommunikation zwischen den Laptops erfolgte über ein Netzwerk, was eine bessere Lastverteilung und stabile Demonstrationsbedingungen sicherstellte.
 
 \chapter{Reflexion}
 
+Zu Beginn des Projekts war geplant, einen Ollama-Container zu verwenden. Nach ersten Tests entschieden wir uns jedoch, stattdessen die Transformers-Bibliothek einzusetzen. Diese Entscheidung erwies sich als sinnvoll, da die Implementierung dadurch effizienter und durch die umfassendere Dokumentation und die Vielzahl an verfügbaren Modellen einfacher wurde.\newline
+
+Ein weiterer Aspekt, der im Rückblick optimiert werden könnte, betrifft die Einrichtung des Connection Pools. Eine frühere Absprache mit dem Dozenten hätte unnötige Anpassungen und Umstellungen vermieden, wodurch wir uns stärker auf die zentralen Projektinhalte hätten konzentrieren können.\newline
+
+Die Arbeit mit Elasticsearch stellte ebenfalls eine Herausforderung dar. Die Dokumentation für die neueste Major-Version war zum Zeitpunkt der Projektarbeit nicht aktuell, was die Konfiguration erschwerte. Anpassungen an veränderten Einstellungen erforderten zusätzliche Recherche und Umstellungen.\newline
+
+Rückblickend war es hilfreich, flexibel auf unerwartete Herausforderungen zu reagieren und regelmäßig den aktuellen Stand im Team abzustimmen. Trotz einiger Schwierigkeiten konnten wir durch gezielte Lösungsansätze und eine offene Kommunikation erfolgreiche Ergebnisse erzielen und wichtige Projekterfahrungen sammeln.
 
 %********************************
 %Literaturverzeichnis
